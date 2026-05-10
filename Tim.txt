@@ -4,9 +4,9 @@ Nama Tim: Kelompok A
 |:----------|:-----------------------|
 | 241110083 | Aelberth Cheong        |
 | 241110910 | Fendy                  |
-| 24111     | Sean Ryo Valens Sahala |
+| 241111106 | Sean Ryo Valens Sahala |
 | 241112555 | Vincent                |
-| 24111     | Vincent Lim            |
+| 241110202 | Vincent Lim            |
 
 Teknologi yang kami gunakan:
 * Frontend:
