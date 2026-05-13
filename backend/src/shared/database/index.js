@@ -1,22 +1,12 @@
-import { Pool } from "pg";
+import "dotenv/config";
+import { PrismaMariaDb } from "@prisma/adapter-mariadb";
+import { PrismaClient } from "./generated/index.js";
 
-const dbPool = new Pool({
-    user: process.env.PGUSER,
-    host: process.env.PGHOST,
-    database: process.env.PGDATABASE,
-    password: process.env.PGPASSWORD,
-    port: process.env.PGPORT,
+const adapter = new PrismaMariaDb({
+    host: process.env.DATABASE_HOST,
+    user: process.env.DATABASE_USER,
+    password: process.env.DATABASE_PASSWORD,
+    database: process.env.DATABASE_NAME,
 });
-
-export async function testConnection() {
-    try {
-        // tes koneksi. apakah bisa query?
-        await dbPool.query("SELECT NOW()");
-        console.log(`\x1b[36m[Postgres] Database connected\x1b[0m`);
-    } catch (error) {
-        console.error("\x1b[31m[Postgres] Database error\x1b[0m", error);
-        process.exit(1);
-    }
-};
-
-export default dbPool;
+const prisma = new PrismaClient({ adapter });
+export { prisma };

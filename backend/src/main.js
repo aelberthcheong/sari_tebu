@@ -1,17 +1,17 @@
-import app from "./app.js";
 import "dotenv/config";
-import { testConnection } from "./shared/database/index.js";
+import app from "./app.js";
+import ANSI from "./shared/utils/ansi.js";
 
 async function init() {
-    // tes koneksi dengan database
-    if (process.env.NODE_ENV !== "production") await testConnection();
-
     const host = process.env.HOST;
     const port = process.env.PORT;
 
-    app.listen(port, host, () => {
+    app.listen(port, host, function () {
         console.log(
-            `\x1b[34mServer berjalan pada \x1b[93mhttp://${host}:${port}\x1b[0m`,
+            [
+                `  ${ANSI.BRIGHTYELLOW}Server running on ${ANSI.BRIGHTWHITE}[http://${host}:${port}]${ANSI.RESET}.\n`,
+                `  ${ANSI.BRIGHTYELLOW}Press ${ANSI.BRIGHTWHITE}<Ctrl+C>${ANSI.RESET}${ANSI.BRIGHTYELLOW} to stop the server${ANSI.RESET}\n`,
+            ].join("\n"),
         );
     });
 }

@@ -24,4 +24,8 @@ export default class ClientError extends Error {
     static notFound(message = "Not Found") {
         return new ClientError(message, 404);
     }
+
+    static conflict(message = "Conflict") {
+        return new ClientError(message, 409);
+    }
 }

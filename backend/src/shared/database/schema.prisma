@@ -1,0 +1,95 @@
+generator client {
+    provider = "prisma-client-js"
+    output   = "./generated"
+}
+
+datasource db {
+    provider = "mysql"
+}
+
+model User {
+    id           String        @id @db.VarChar(32)
+    username     String        @unique
+    password     String
+    fullname     String
+    created_at   DateTime      @default(now())
+    carts        Cart[]
+    transactions Transaction[]
+    Auths        Auth[]
+
+    @@map("users")
+}
+
+model Auth {
+    refresh_token String @id @db.VarChar(512)
+    user_id       String @db.VarChar(32)
+    user          User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+    @@index([user_id])
+    @@map("authentications")
+}
+
+model Product {
+    id                String            @id @db.VarChar(32)
+    name              String
+    price             Int
+    stock             Int
+    created_at        DateTime          @default(now())
+    updated_at        DateTime          @updatedAt
+    cart_items        CartItem[]
+    transaction_items TransactionItem[]
+
+    @@index([name])
+    @@map("products")
+}
+
+model Cart {
+    id         String     @id @db.VarChar(32)
+    user_id    String     @db.VarChar(32)
+    created_at DateTime   @default(now())
+    updated_at DateTime   @updatedAt
+    items      CartItem[]
+    user       User       @relation(fields: [user_id], references: [id])
+
+    @@index([user_id], map: "carts_user_id_fkey")
+    @@map("carts")
+}
+
+model CartItem {
+    id         String  @id @db.VarChar(32)
+    cart_id    String  @db.VarChar(32)
+    product_id String  @db.VarChar(32)
+    quantity   Int
+    cart       Cart    @relation(fields: [cart_id], references: [id], onDelete: Cascade)
+    product    Product @relation(fields: [product_id], references: [id])
+
+    @@index([cart_id])
+    @@index([product_id])
+    @@map("cart_items")
+}
+
+model Transaction {
+    id         String            @id @db.VarChar(32)
+    user_id    String            @db.VarChar(32)
+    total      Int
+    created_at DateTime          @default(now())
+    items      TransactionItem[]
+    user       User              @relation(fields: [user_id], references: [id])
+
+    @@index([user_id])
+    @@map("transactions")
+}
+
+model TransactionItem {
+    id             String      @id @db.VarChar(32)
+    transaction_id String      @db.VarChar(32)
+    product_id     String      @db.VarChar(32)
+    quantity       Int
+    price_at_time  Int
+    product        Product     @relation(fields: [product_id], references: [id])
+    transaction    Transaction @relation(fields: [transaction_id], references: [id], onDelete: Cascade)
+
+    @@index([transaction_id])
+    @@index([product_id])
+    @@map("transaction_items")
+}

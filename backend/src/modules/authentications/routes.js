@@ -1,11 +1,12 @@
 import { Router } from "express";
+
+import { validatePayload } from "../../shared/middlewares/validate_middleware.js";
 import { login, logout, refreshAccessToken } from "./controller.js";
 import {
     createAuthSchema,
     renewAccessTokenSchema,
     deleteAuthSchema,
 } from "./schema.js";
-import { validatePayload } from "../../shared/middlewares/validate_middleware.js";
 
 const routes = Router();
 

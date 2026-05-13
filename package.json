@@ -1,0 +1,11 @@
+{
+    "version": "0.1.0",
+    "scripts": {
+        "setup:backend" : "cd backend && npm run setup",
+        "setup:frontend": "cd frontend && npm run setup",
+        "setup": "npm run setup:backend && npm run setup:frontend",
+
+        "start": "",
+        "dev"  : ""
+    }
+}

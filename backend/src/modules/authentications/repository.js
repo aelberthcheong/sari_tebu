@@ -1,31 +1,33 @@
-import pool from "../../shared/database/index.js";
+import { prisma } from "../../shared/database/index.js";
 
 class authenticationsRepository {
-    async addRefreshToken(refreshToken) {
-        const pq = {
-            text: `INSERT INTO authentications VALUES ($1)`,
-            values: [refreshToken],
-        };
-        await pool.query(pq);
+    async addRefreshToken(userId, refreshToken) {
+        // Tiap kali login, hapus refresh token lama dan kasih yang baru
+        await prisma.auth.deleteMany({
+            where: { user_id: userId },
+        });
+        await prisma.auth.create({
+            data: { refresh_token: refreshToken, user_id: userId },
+        });
     }
 
     async verifyRefreshToken(refreshToken) {
-        const pq = {
-            text: `SELECT refresh_token FROM authentications WHERE refresh_token = $1`,
-            values: [refreshToken],
-        };
-
-        const { rows } = await pool.query(pq);
-        return rows.length > 0;
+        return (
+            (await prisma.auth.findUnique({
+                where: { refresh_token: refreshToken },
+            })) ?? false
+        );
     }
 
     async deleteRefreshToken(refreshToken) {
-        const pq = {
-            text: `DELETE FROM authentications WHERE refresh_token = $1`,
-            values: [refreshToken],
-        };
-        const { rowCount } = await pool.query(pq);
-        return rowCount > 0;
+        try {
+            await prisma.auth.delete({
+                where: { refresh_token: refreshToken },
+            });
+            return true;
+        } catch {
+            return false;
+        }
     }
 }
 

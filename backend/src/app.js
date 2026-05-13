@@ -1,25 +1,33 @@
-import express from "express";
 import cors from "cors";
+import express from "express";
 
-import usersRoutes from "./modules/users/routes.js";
 import authenticationsRoutes from "./modules/authentications/routes.js";
-import productRoutes from "./modules/products/routes.js";
 import cartsRoutes from "./modules/carts/routes.js";
-import transactionsRoutes from "./modules/transactions/routes.js"
+import productRoutes from "./modules/products/routes.js";
+import transactionsRoutes from "./modules/transactions/routes.js";
+import usersRoutes from "./modules/users/routes.js";
 import errorMiddleware from "./shared/middlewares/error_middleware.js";
+import reqlog from "./shared/middlewares/reqlog_middleware.js";
 
 const app = express();
 
-app.use(cors());
+app.use(
+    cors({
+        origin: process.env.CORS_ALLOWED_ORIGINS,
+    }),
+);
 app.use(express.json());
+app.use(reqlog());
 
-app.use("/", usersRoutes);
-app.use("/", authenticationsRoutes);
-app.use("/", productRoutes);
-app.use("/", cartsRoutes);
-app.use("/", transactionsRoutes);
+app.use("/", [
+    usersRoutes,
+    authenticationsRoutes,
+    productRoutes,
+    cartsRoutes,
+    transactionsRoutes,
+]);
 
-// error middleware harus berada pada urutan terakhir
+// NOTE: Error middleware harus berada pada urutan terakhir
 app.use(errorMiddleware);
 
 export default app;

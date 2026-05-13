@@ -1,10 +1,10 @@
 import ClientError from "../exceptions/client_error.js";
 
-export default function(err, req, res, next) {
+export default function (err, req, res, _next) {
     if (err instanceof ClientError) {
         res.status(err.statusCode).json({
-            status : "fail",
-            message: err.message
+            status: "fail",
+            message: err.message,
         });
         return;
     }
@@ -17,10 +17,11 @@ export default function(err, req, res, next) {
         return;
     }
 
+    // TODO: add better error logging
+    console.error(err.stack);
+
     res.status(err.status || 500).json({
         status: "error",
-        message: process.env.NODE_ENV !== "production" && err.message 
-            ? err.message 
-            : "Internal Server Error"
+        message: "Internal Server Error",
     });
 }

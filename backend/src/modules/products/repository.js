@@ -1,11 +1,11 @@
-import pool from "../../shared/database/index.js";
+import { prisma } from "../../shared/database/index.js";
 import { nanoid } from "nanoid";
 
 class ProductRepository {
     async getAll() {
         const { rows } = await pool.query({
             text: `SELECT * FROM products ORDER BY name ASC`,
-            values: []
+            values: [],
         });
         return rows;
     }
@@ -13,7 +13,7 @@ class ProductRepository {
     async getById(id) {
         const { rows } = await pool.query({
             text: `SELECT * FROM products WHERE id = $1`,
-            values: [id]
+            values: [id],
         });
         return rows[0];
     }
@@ -25,7 +25,7 @@ class ProductRepository {
                 INSERT INTO products (id, name, price, stock)
                 VALUES ($1, $2, $3, $4) RETURNING ID
             `,
-            values: [id, name, price, stock]
+            values: [id, name, price, stock],
         });
         return rows[0];
     }
@@ -36,7 +36,7 @@ class ProductRepository {
                 UPDATE products SET name=$1, price=$2, stock=$3
                 WHERE id=$4 RETURNING id
             `,
-            values: [name, price, stock, id]
+            values: [name, price, stock, id],
         });
         return rows[0];
     }
@@ -44,7 +44,7 @@ class ProductRepository {
     async deleteProduct(id) {
         const { rowCount } = await pool.query({
             text: `DELETE FROM products WHERE id=$1`,
-            values: [id]
+            values: [id],
         });
         return rowCount > 0;
     }
