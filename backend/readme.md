@@ -58,7 +58,7 @@ npm run start  // Production stage
 > Usage `migrate:create` dikarenakan merupakan `prisma migrate dev --name` kamu perlu menambahkan `--` agar npm dapat menerima argumen tsb.
 
 > [!NOTE]
-> Usage `setup:test`
+> Usage `setup:test` akan menginstall postman-cli secara globally, jika tidak diinginkan maka bisa gunakan postman applikasi desktop.
 
 ## Deployment
 
