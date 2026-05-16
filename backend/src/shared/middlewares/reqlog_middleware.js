@@ -29,7 +29,6 @@ function formatMethod(method) {
 
 /**
  * Returns middleware untuk menampilkan request-request yang telah diterima dan diproses oleh backend.
- * @param {*} options
  * Menerima beberapa opsi, diantara-nya:
  *   - `pretty`: Memberi warna pada baris-baris log, set ke `false`
  *               jika baris-baris log tsb ingin disimpan pada file

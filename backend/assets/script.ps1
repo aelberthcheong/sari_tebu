@@ -1,8 +1,7 @@
 function Get-Images {
     [CmdLetBinding()]
     param (
-        [string]$Link,
-        [int]$Size=64
+        [string]$Link
     )
 
     $content = Invoke-WebRequest -Uri $Link -Method "GET" | Select-Object -ExpandProperty "Content";
