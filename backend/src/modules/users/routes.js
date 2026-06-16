@@ -1,10 +1,7 @@
 import { Router } from "express";
 
-import requireAuth from "#/shared/middlewares/auth_middleware.js";
-import {
-    validatePayload,
-    validateQuery,
-} from "#/shared/middlewares/validate_middleware.js";
+import requireAuthentication from "#/shared/middlewares/authentication.js";
+import requireValidation from "#/shared/middlewares/validation.js";
 
 import {
     createUser,
@@ -23,15 +20,23 @@ import {
 
 const routes = Router();
 
-routes.post("/", [validatePayload(createUserSchema), createUser]);
-routes.get("/", [requireAuth, validateQuery(searchUserSchema), getUsers]);
-routes.get("/:id", [requireAuth, getUserById]);
+routes.post("/", [requireValidation("body", createUserSchema), createUser]);
+routes.get("/", [
+    requireAuthentication(),
+    requireValidation("body", searchUserSchema),
+    getUsers,
+]);
+routes.get("/:id", [requireAuthentication(), getUserById]);
 routes.put("/:id", [
-    requireAuth,
-    validatePayload(updateUserSchema),
+    requireAuthentication(),
+    requireValidation("body", updateUserSchema),
     updateUser,
 ]);
-routes.patch("/:id", [requireAuth, validatePayload(editUserSchema), editUser]);
-routes.delete("/:id", [requireAuth, deleteUser]);
+routes.patch("/:id", [
+    requireAuthentication(),
+    requireValidation("body", editUserSchema),
+    editUser,
+]);
+routes.delete("/:id", [requireAuthentication(), deleteUser]);
 
 export default routes;

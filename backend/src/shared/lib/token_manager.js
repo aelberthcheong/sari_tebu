@@ -29,13 +29,8 @@ export function generateRefreshToken(payload) {
     });
 }
 
-/**
- *
- * @param {string} accessToken
- */
 export function verifyAccessToken(accessToken) {
     try {
-        // @ts-ignore
         const decoded = jwt.verify(accessToken, process.env.ACCESS_TOKEN_KEY);
         return decoded;
     } catch {
@@ -43,13 +38,8 @@ export function verifyAccessToken(accessToken) {
     }
 }
 
-/**
- *
- * @param {string} refreshToken
- */
 export function verifyRefreshToken(refreshToken) {
     try {
-        // @ts-ignore
         const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_KEY);
         return decoded;
     } catch {
@@ -57,10 +47,6 @@ export function verifyRefreshToken(refreshToken) {
     }
 }
 
-/**
- * @param {string} token
- * @returns
- */
 export function hashToken(token) {
     return crypto.createHash("sha256").update(token).digest("hex");
 }

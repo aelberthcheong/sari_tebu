@@ -1,11 +1,11 @@
 import ANSI from "../utils/ansi.js";
 
-// TODO: Tolong update middleware ini setelah logger yang betulan sudah dibuat
-//       direncanakan logger tsb bersifat platform-agnostic
-//       dan mengirimkan `.json` atau `.db`.
+// TODO(AELBERTH): Tolong update middleware ini setelah logger yang betulan sudah dibuat
+//                 direncanakan logger tsb bersifat platform-agnostic
+//                 dan mengirimkan `.json` atau `.db`.
 //
-//       Untuk sementara, middleware ini berfungsi hanya sebagai telemetry tambahan
-//       untuk tiap request yang diterima oleh backend.
+//                 Untuk sementara, middleware ini berfungsi hanya sebagai telemetry tambahan
+//                 untuk tiap request yang diterima oleh backend.
 
 function formatStatus(status) {
     if (status >= 500) return `${ANSI.RED}${status}${ANSI.RESET}`;
@@ -37,6 +37,10 @@ function formatMethod(method) {
 
 export default function (options = {}) {
     return function (req, res, next) {
+        if (process.env.NODE_ENV === "production") {
+            return;
+        }
+
         const start = process.hrtime.bigint();
 
         res.on("finish", function () {

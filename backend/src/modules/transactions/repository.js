@@ -1,5 +1,8 @@
-import { prisma } from "../../shared/database/index.js";
+// TODO(AELBERTH): TOLONG KERJAI PLEASE.
+
 import { nanoid } from "nanoid";
+
+import { prisma } from "../../shared/database/index.js";
 
 class TransactionRepository {
     async checkout({ items, total, cash }) {

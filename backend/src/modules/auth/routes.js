@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { validatePayload } from "#/shared/middlewares/validate_middleware.js";
+import requireValidation from "#/shared/middlewares/validation.js";
 
 import { login, logout, refreshAccessToken } from "./controller.js";
 import {
@@ -11,11 +11,11 @@ import {
 
 const routes = Router();
 
-routes.post("/login", [validatePayload(createAuthSchema), login]);
+routes.post("/login", [requireValidation("body", createAuthSchema), login]);
 routes.post("/refresh", [
-    validatePayload(renewAccessTokenSchema),
+    requireValidation("body", renewAccessTokenSchema),
     refreshAccessToken,
 ]);
-routes.post("/logout", [validatePayload(logoutAuthSchema), logout]);
+routes.post("/logout", [requireValidation("body", logoutAuthSchema), logout]);
 
 export default routes;

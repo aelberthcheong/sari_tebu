@@ -1,18 +1,5 @@
 import * as ProductService from "./service.js";
 
-/**
- * @typedef {import('express').Request & {
- *   validatedBody?: any,
- *   validatedQuery?: any,
- *   validatedParams?: any
- * }} Request
- * @typedef {import('express').Response} Response
- */
-
-/**
- * @param {Request} req
- * @param {Response} res
- */
 export async function getProducts(req, res) {
     const { name } = req.validatedQuery ?? {};
     const products = await ProductService.getProducts(name);
@@ -22,10 +9,6 @@ export async function getProducts(req, res) {
     });
 }
 
-/**
- * @param {Request} req
- * @param {Response} res
- */
 export async function getProduct(req, res) {
     const product = await ProductService.getProduct(req.validatedParams.id);
     res.status(200).json({
@@ -34,10 +17,6 @@ export async function getProduct(req, res) {
     });
 }
 
-/**
- * @param {Request} req
- * @param {Response} res
- */
 export async function createProduct(req, res) {
     const product = await ProductService.createProduct(req.validatedBody);
     res.status(201).json({
@@ -46,10 +25,6 @@ export async function createProduct(req, res) {
     });
 }
 
-/**
- * @param {Request} req
- * @param {Response} res
- */
 export async function updateProduct(req, res) {
     const product = await ProductService.updateProduct(
         req.validatedParams.id,
@@ -61,10 +36,6 @@ export async function updateProduct(req, res) {
     });
 }
 
-/**
- * @param {Request} req
- * @param {Response} res
- */
 export async function editProduct(req, res) {
     const product = await ProductService.updateProduct(
         req.validatedParams.id,
@@ -76,10 +47,6 @@ export async function editProduct(req, res) {
     });
 }
 
-/**
- * @param {Request} req
- * @param {Response} res
- */
 export async function deleteProduct(req, res) {
     await ProductService.deleteProduct(req.validatedParams.id);
     res.status(200).json({

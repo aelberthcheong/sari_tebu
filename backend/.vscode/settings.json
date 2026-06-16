@@ -1,11 +1,5 @@
 {
     "oxc.fmt.configPath": ".oxfmtrc.json",
     "editor.defaultFormatter": "oxc.oxc-vscode",
-    "editor.formatOnSave": true,
-    "[dockerfile]": {
-        "editor.defaultFormatter": "ms-azuretools.vscode-containers"
-    }
-    // "editor.codeActionsOnSave": {
-    //     "source.fixAll.prettier": "always"
-    // }
+    "editor.formatOnSave": true
 }

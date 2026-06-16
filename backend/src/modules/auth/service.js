@@ -3,7 +3,7 @@ import { nanoid } from "nanoid";
 
 import { prisma } from "#/shared/database/index.js";
 import ClientError from "#/shared/exceptions/client_error.js";
-import * as TokenManager from "#/shared/security/token_manager.js";
+import * as TokenManager from "#/shared/lib/token_manager.js";
 
 /**
  * Melakukan proses login pengguna. Memverifikasi kredensial, membuat access token dan refresh token,
