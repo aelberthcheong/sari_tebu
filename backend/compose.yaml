@@ -16,7 +16,6 @@ services:
             start_period: 30s
 
     server:
-        container_name: sari-tebu-server
         build:
             context: .
             dockerfile: Dockerfile
