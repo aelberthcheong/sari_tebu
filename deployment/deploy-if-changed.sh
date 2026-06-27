@@ -43,4 +43,7 @@ else
 fi
 make scale-down
 
+echo "$(date --utc +%FT%TZ): Performing migrations..."
+make migrate
+
 echo "$(date --utc +%FT%TZ): Done."
