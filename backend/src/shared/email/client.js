@@ -90,14 +90,16 @@ export default class EmailClient {
     async sendSignupCodeEmail(dest, code) {
         const subject = "Verify your account email address";
         const body = `Do not share this code with anyone. If you didn't request this, you can safely ignore this email.
-Your email address verification code is: ${formatEmailCode(code)}`;
+Your email address verification code is: ${formatEmailCode(code)}
+`;
 
         await this.client.sendEmail(this.address, dest, { subject, body });
     }
 
     async sendSignedInEmail(dest) {
         const subject = "New sign-in to your account";
-        const body = `We detected a recent login to your account. If it wasn't you, please secure your account by resetting your password immediately.`;
+        const body = `We detected a recent login to your account. If it wasn't you, please secure your account by resetting your password immediately.
+`;
 
         await this.client.sendEmail(this.address, dest, { subject, body });
     }
@@ -105,14 +107,16 @@ Your email address verification code is: ${formatEmailCode(code)}`;
     async sendPasswordResetCodeEmail(dest, code) {
         const subject = "Reset your account password";
         const body = `Do not share this code with anyone. If you didn't request this, you can safely ignore this email.
-Your email address verification code is: ${formatEmailCode(code)}`;
+Your email address verification code is: ${formatEmailCode(code)}
+`;
 
         await this.client.sendEmail(this.address, dest, { subject, body });
     }
 
     async sendPasswordUpdatedEmail(dest) {
         const subject = "Your account password was recently updated";
-        const body = `Your account password was recently updated. If you did not make this change, please secure your account by resetting your password immediately.`;
+        const body = `Your account password was recently updated. If you did not make this change, please secure your account by resetting your password immediately.
+`;
 
         await this.client.sendEmail(this.address, dest, { subject, body });
     }
@@ -120,14 +124,16 @@ Your email address verification code is: ${formatEmailCode(code)}`;
     async sendAddressResetCodeEmail(dest, code) {
         const subject = "Verify your new account email address";
         const body = `Do not share this code with anyone. If you didn't request this, you can safely ignore this email.
-Your email address verification code is: ${formatEmailCode(code)}`;
+Your email address verification code is: ${formatEmailCode(code)}
+`;
 
         await this.client.sendEmail(this.address, dest, { subject, body });
     }
 
     async sendAddressUpdatedEmail(dest) {
         const subject = "Your account email address was recently updated";
-        const body = `This email address is no longer tied to your account.`;
+        const body = `This email address is no longer tied to your account.
+`;
 
         await this.client.sendEmail(this.address, dest, { subject, body });
     }

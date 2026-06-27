@@ -13,7 +13,7 @@ const publicUserField = {
 };
 
 export async function createUser({ emailAddress, username, password }) {
-    const hashedPassword = await bcrypt.hash(password);
+    const hashedPassword = await bcrypt.hash(password, 10);
     try {
         return await prisma.user.create({
             data: {

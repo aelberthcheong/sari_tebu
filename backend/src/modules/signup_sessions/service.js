@@ -28,7 +28,7 @@ export async function createSignupSession(emailAddress) {
     });
 
     const secret = generateSessionSecret();
-    const verificationCode = randomInt(0, 100_000_000)
+    const verificationCode = randomInt(10_000_000, 100_000_000)
         .toString()
         .padStart(8, "0");
 
@@ -37,7 +37,8 @@ export async function createSignupSession(emailAddress) {
             id: nanoid(),
             email_address: emailAddress,
             session_secret_hash: hashSessionSecret(secret),
-            verificationCode: bcrypt.hash(verificationCode),
+            email_code_hash: await bcrypt.hash(verificationCode, 10),
+            is_email_verified: false
         },
     });
 
@@ -57,14 +58,14 @@ export async function verifyEmailAddress(signupSession, code) {
 }
 
 export async function refreshVerificationCode(id) {
-    const verificationCode = randomInt(0, 100_000_000)
+    const verificationCode = randomInt(10_000_000, 100_000_000)
         .toString()
         .padStart(8, "0");
 
     await prisma.signupSession.update({
         where: { id: id },
         data: {
-            email_code_hash: bcrypt.hash(verificationCode),
+            email_code_hash: await bcrypt.hash(verificationCode, 10),
         },
     });
 
@@ -73,7 +74,7 @@ export async function refreshVerificationCode(id) {
 
 export async function deleteSignupSession(id) {
     try {
-        await prisma.user.delete({
+        await prisma.singupSession.delete({
             where: { id: id },
         });
     } catch (err) {

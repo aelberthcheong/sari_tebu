@@ -5,7 +5,7 @@ import * as SignupSessionService from "./service.js";
 export async function createSignupSession(req, res) {
     const { emailAddress } = req.body;
     const { token, verificationCode } =
-        await SignupSessionService.createSignupSession();
+        await SignupSessionService.createSignupSession(emailAddress);
 
     await mail.sendSignupCodeEmail(emailAddress, verificationCode);
 
