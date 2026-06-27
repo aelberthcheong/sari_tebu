@@ -24,5 +24,8 @@ scale-down: ## Scale down the old container for backend and frontend server
 	docker compose -f "$(COMPOSE_FILE)" up -d --no-deps --scale server=1 --no-recreate server
 	docker compose -f "$(COMPOSE_FILE)" up -d --no-deps --scale frontend=1 --no-recreate frontend
 
-down: ## 
+migrate: ## migrate database
+    docker compose exec --index=1 server npx prisma migrate deploy
+
+down: ## Close down all containers
 	docker compose -f "$(COMPOSE_FILE)" down
