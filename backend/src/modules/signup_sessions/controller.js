@@ -3,7 +3,7 @@ import mail from "#/shared/email/index.js";
 import * as SignupSessionService from "./service.js";
 
 export async function createSignupSession(req, res) {
-    const { emailAddress } = req.body;
+    const { emailAddress } = req.validatedBody;
     const { token, verificationCode } =
         await SignupSessionService.createSignupSession(emailAddress);
 
@@ -23,7 +23,7 @@ export async function createSignupSession(req, res) {
 }
 
 export async function verifyEmailAddress(req, res) {
-    const { code } = req.body;
+    const { code } = req.validatedBody;
 
     await SignupSessionService.verifyEmailAddress(req.signupSession, code);
     res.status(200).json({
