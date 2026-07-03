@@ -1,6 +1,7 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
 import path from "node:path";
+
+import react from "@vitejs/plugin-react";
+import { defineConfig } from "vite";
 
 export default defineConfig({
     plugins: [react()],
@@ -14,20 +15,33 @@ export default defineConfig({
         sourcemap: false,
         rollupOptions: {
             output: {
-                manualChunks: {
-                    vendor: ["react", "react-dom", "react-router"],
-                    astryx: ["@astryxdesign/core"],
+                manualChunks(id) {
+                    if (id.includes("@astryxdesign/core")) {
+                        return "astryx";
+                    }
+                    if (id.includes("node_modules")) {
+                        return "vendor";
+                    }
+                    if (
+                        id.includes("react-dom") ||
+                        id.includes("react-router")
+                    ) {
+                        return "vendor";
+                    }
+                    if (id.includes("react")) {
+                        return "vendor";
+                    }
                 },
             },
         },
-    }, 
+    },
     server: {
         port: 5173,
         proxy: {
             "/api": {
                 target: "http://localhost:8080",
                 changeOrigin: true,
-            }
-        }
-    }
-})
+            },
+        },
+    },
+});
