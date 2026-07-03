@@ -42,10 +42,6 @@ Dikarenakan koneksi internet server ini adad di bawah CGNAT (tidak ada Public IP
     credentials-file: /home/<user>/.cloudflared/<tunnel-id>.json
 
     ingress:
-        - hostname: api.aelberthcheong.dev
-          service: https://127.0.0.1:443
-          originRequest:
-            originServerName: api.aelberthcheong.dev
         - hostname: saritebu.aelberthcheong.dev
           service: https://127.0.0.1:443
           originRequest:

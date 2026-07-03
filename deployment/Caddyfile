@@ -12,18 +12,20 @@
     email {$ACME_EMAIL}
 }
 
-api.aelberthcheong.dev {
-    tls {
-        dns cloudflare {$CLOUDFLARE_API_TOKEN}
-    }
-    reverse_proxy server:8080
-}
-
 saritebu.aelberthcheong.dev {
     tls {
         dns cloudflare {$CLOUDFLARE_API_TOKEN}
     }
-    reverse_proxy frontend:5173
+
+    # API calls proxy ke server (backend)
+    handle /api/* {
+        reverse_proxy server:8080
+    }
+
+    # Yang lain proxy ke frontend
+    handle {
+        reverse_proxy frontend:80
+    }
 }
 
 import Caddyfile.d/*.caddyfile

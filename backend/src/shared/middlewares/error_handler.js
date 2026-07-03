@@ -10,6 +10,10 @@ const bodyParserMessages = {
 export default function requireErrorHandler() {
     // oxlint-disable-next-line no-unused-vars
     return function (err, req, res, next) {
+        // TODO(AELBERTH): add better error logging
+        console.error("[ERROR]", err.name || err.type, ":", err.message);
+        console.error(err);
+
         if (err instanceof ClientError) {
             res.status(err.statusCode).json({
                 status: "fail",
@@ -28,15 +32,12 @@ export default function requireErrorHandler() {
 
         const bodyParserMessage = bodyParserMessages[err.type];
         if (bodyParserMessage) {
-            res.status(err.statusCode).json({
+            res.status(err.statusCode || 400).json({
                 status: "fail",
                 message: bodyParserMessage,
             });
             return;
         }
-
-        // TODO(AELBERTH): add better error logging
-        console.error(err);
 
         res.status(err.statusCode || 500).json({
             status: "error",

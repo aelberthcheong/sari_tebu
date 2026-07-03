@@ -16,7 +16,7 @@ export default function requireValidation(type, schema) {
         );
     }
 
-    return function (req, res, next) {
+    return async function (req, res, next) {
         const { value, error } = schema.validate(req[type], {
             abortEarly: false,
             stripUnknown: true,

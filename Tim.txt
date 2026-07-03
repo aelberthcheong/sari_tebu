@@ -14,12 +14,12 @@ Teknologi yang kami gunakan:
   - React Router
   - Bootstrap
 * Backend:
-  - express
+  - Express
   - Mysql
-  - prisma
-  - jsonwebtoken (JWT)
-  - joi
-  - bcrypt
+  - Prisma
+  - Joi
+  - Bcrypt
+  - Resend
 
 Kredit (resource-resource yang kami pakai sebagai referensi/inspirasi)
 https://skripsi-setia-abadi.vercel.app (username: super.admin.one, password: 123456)

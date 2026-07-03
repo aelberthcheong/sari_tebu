@@ -38,7 +38,7 @@ services:
         env_file:
             - ../frontend/.env.prod
         expose:
-            - "5173"
+            - "80"
     
     caddy:
         build:

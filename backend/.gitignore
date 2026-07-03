@@ -1,8 +1,11 @@
 node_modules/
 generated/
+dist/
+build/
 .vscode/
 .env
 .env.prod
 .env.*
 !.env.example
-/src/generated/prisma
+*.log
+*.lock
