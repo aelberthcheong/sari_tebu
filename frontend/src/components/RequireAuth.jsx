@@ -10,7 +10,7 @@ export default function RequireAuth({ children }) {
             .catch(() => setStatus("unauth"));
     }, []);
 
-    if (status === "loading") return null; // or a spinner
+    if (status === "loading") return null;
     if (status === "unauth") return <Navigate to="/login" replace />;
     return children;
 }

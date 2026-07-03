@@ -58,7 +58,7 @@ const LOGIN_SPLIT_CSS = `
 }
 `;
 
-export default function LoginTwoColumn() {
+export default function Login() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loginFailed, setLoginFailed] = useState(false);
