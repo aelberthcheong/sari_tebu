@@ -7,13 +7,15 @@ export async function createPasswordResetSession(req, res) {
     const { token, verificationCode } =
         await PasswordResetSessionService.createPasswordResetSession(emailAddress);
 
+    console.log(token);
+
     if (token) {
         await mail.sendPasswordResetCodeEmail(emailAddress, verificationCode);
         res.cookie("password_reset_session_token", token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "lax",
-            maxAge: process.env.SESSION_TOKEN_AGE,
+            maxAge: Number(process.env.SESSION_TOKEN_AGE),
         });
     }
 

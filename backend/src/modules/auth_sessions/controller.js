@@ -1,15 +1,6 @@
 import mail from "#/shared/email/index.js";
 import * as AuthSessionService from "./service.js";
 
-function setAuthSessionCookie(res, token) {
-    res.cookie("auth_session_token", token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: process.env.SESSION_TOKEN_AGE,
-    });
-}
-
 export async function register(req, res) {
     const { username, password } = req.validatedBody;
     const { token, user } = await AuthSessionService.register(
@@ -25,7 +16,12 @@ export async function register(req, res) {
         sameSite: "lax",
     });
 
-    setAuthSessionCookie(res, token);
+    res.cookie("auth_session_token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: Number(process.env.SESSION_TOKEN_AGE),
+    });
 
     res.status(201).json({
         status: "success",
@@ -44,7 +40,12 @@ export async function login(req, res) {
     const { emailAddress, password } = req.validatedBody;
     const { token, user } = await AuthSessionService.login(emailAddress, password);
 
-    setAuthSessionCookie(res, token);
+    res.cookie("auth_session_token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: Number(process.env.SESSION_TOKEN_AGE),
+    });
 
     await mail.sendSignedInEmail(user.email_address);
 

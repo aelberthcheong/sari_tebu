@@ -1,4 +1,4 @@
-import mail from "../../shared/email/index.js";
+import mail from "#/shared/email/index.js";
 
 import * as SignupSessionService from "./service.js";
 
@@ -13,7 +13,7 @@ export async function createSignupSession(req, res) {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
-        maxAge: process.env.SESSION_TOKEN_AGE,
+        maxAge: Number(process.env.SESSION_TOKEN_AGE),
     });
 
     res.status(201).json({

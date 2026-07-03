@@ -9,5 +9,5 @@ export const verifyEmailAddressSchema = Joi.object({
 });
 
 export const resetPasswordSchema = Joi.object({
-    password: Joi.string().min(8).max(100).required(),
+    password: Joi.string().min(10).max(100).required(),
 });

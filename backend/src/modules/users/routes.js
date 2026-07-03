@@ -16,11 +16,13 @@ import { createUserSchema } from "./schema.js";
 
 const routes = Router();
 
-routes.post("/", [
-    requireValidation("body", createUserSchema),
-    requireRateLimit(1000, 5, 5 * 60 * 1000),
-    createUser,
-]);
+
+// TODO(AELBERTH): Tolong di sesuaikan
+// routes.post("/", [
+//     requireValidation("body", createUserSchema),
+//     requireRateLimit(1000, 5, 5 * 60 * 1000),
+//     createUser,
+// ]);
 
 // routes.get("/", [
 //     requireAuthSession(),

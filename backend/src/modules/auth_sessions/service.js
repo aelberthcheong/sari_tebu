@@ -7,6 +7,10 @@ import {
     hashSessionSecret,
     createSessionToken,
 } from "#/shared/lib/session_manager.js";
+import {
+    verifyUserPasswordStrength,
+    verifyUserPasswordPattern,
+} from "#/shared/lib/password.js";
 
 /**
  * Selesaikan proses signup: ambil SignupSession yang sudah verified, buat
@@ -18,7 +22,7 @@ import {
  * @param {string} password
  */
 export async function register(signupSession, username, password) {
-    if (!signupSession.is_email_verified) {
+    if (!signupSession.email_verified_at) {
         throw ClientError.forbidden("Alamat email belum di-verifikasi");
     }
 
@@ -27,19 +31,32 @@ export async function register(signupSession, username, password) {
     const exists = await prisma.user.findUnique({
         where: { email_address: signupSession.email_address },
     });
+
     if (exists) {
         throw ClientError.conflict("Email address sudah di register sebelum nya");
     }
 
-    const passwordHash = await bcrypt.hash(password, 10);
+    if (!verifyUserPasswordPattern(password)) {
+        throw ClientError.unprocessable(
+            "Password harus berukuran 10-100 karakter dan tidak boleh mengandung karakter non-ASCII."
+        );
+    }
 
+    const isSafe = await verifyUserPasswordStrength(password);
+    if (!isSafe) {
+        throw ClientError.unprocessable(
+            "Password ini tidak aman karena telah bocor dalam database data breach internet. Gunakan kombinasi lain."
+        );
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
     const user = await prisma.$transaction(async (tx) => {
         const user = await tx.user.create({
             data: {
                 id: nanoid(),
                 email_address: signupSession.email_address,
                 username,
-                password_hash: Buffer.from(passwordHash),
+                password_hash: passwordHash,
             },
         });
         await tx.signupSession.delete({ where: { id: signupSession.id } });
@@ -54,15 +71,15 @@ export async function login(emailAddress, password) {
     const user = await prisma.user.findUnique({
         where: { email_address: emailAddress },
     });
-    if (!user) {
-        throw ClientError.unauthorized("Email address atau password salah");
-    }
 
-    const passwordMatches = await bcrypt.compare(
-        password,
-        Buffer.from(user.password_hash).toString(),
-    );
-    if (!passwordMatches) {
+    // Mitigasi Timing Attack menggunakan dummy hash jika user tidak ditemukan
+    // Ini memastikan waktu eksekusi bcrypt tetap sama baik email terdaftar maupun tidak
+    const dummyHash = "$2b$10$Nx33p8LpWdG7uG3M2bY2O.P.wZ5aG8sN.uVp2X8q1mGZ2rS1T4pW.";
+    const hashToCompare = user ? user.password_hash : dummyHash;
+    
+    const passwordMatches = await bcrypt.compare(password, hashToCompare);
+
+    if (!user || !passwordMatches) {
         throw ClientError.unauthorized("Email address atau password salah");
     }
 
@@ -70,10 +87,6 @@ export async function login(emailAddress, password) {
     return { token, user };
 }
 
-/**
- * @param {string} userId
- * @returns {Promise<string>} session token
- */
 async function createAuthSessionForUser(userId) {
     const secret = generateSessionSecret();
     const authSession = await prisma.authSession.create({
@@ -81,7 +94,7 @@ async function createAuthSessionForUser(userId) {
             id: nanoid(),
             user_id: userId,
             session_secret_hash: hashSessionSecret(secret),
-            expires_at: new Date(Date.now() + process.env.SESSION_TOKEN_AGE),
+            expires_at: new Date(Date.now() + Number(process.env.SESSION_TOKEN_AGE)),
         },
     });
     return createSessionToken(authSession.id, secret);

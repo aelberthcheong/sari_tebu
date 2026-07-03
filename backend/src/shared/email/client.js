@@ -137,6 +137,15 @@ Your email address verification code is: ${formatEmailCode(code)}
 
         await this.client.sendEmail(this.address, dest, { subject, body });
     }
+
+    async sendPasswordUpdateConfirmationEmail(dest) {
+        const subject = "Password Reset";
+        const body = `There was an attempt on updating the password account based on this email address.
+If you didn't request this, you can safely ignore this email.
+`;
+
+        await this.client.sendEmail(this.address, dest, { subject, body });
+    }
 }
 
 //     // NOTE: Email template di-create sekali dan akan di store pada SES, maka hit api yang sama

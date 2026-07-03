@@ -13,9 +13,8 @@
  
 - **Hop 1** (browser ↔ Cloudflare) selalu terenkripsi secara default, tidak perlu dikonfigurasi.
 - **Hop 2** (Cloudflare ↔ origin) yang berbeda tergantung platform:
-  - Di **home server**, hop ini diamankan oleh Cloudflare Tunnel (`cloudflared`) — koneksi keluar (outbound) dari server ke Cloudflare yang sudah terenkripsi secara otomatis, sehingga tidak butuh IP publik sama sekali.
-  - Di **Cloud/VPS**, tidak ada tunnel yang menutupi hop ini, sehingga Caddy sendiri yang harus memegang sertifikat TLS yang valid (lihat bagian [Reverse Proxy (Caddy) Setup](#reverse-proxy-caddy-setup)).
-Caddyfile, `docker-compose.yml`, dan `caddy/Dockerfile` **sama persis** di kedua platform — hanya isi `.env` dan ada/tidaknya `cloudflared` yang membedakan
+  - Di **home server**, hop diamankan oleh Cloudflare Tunnel (`cloudflared`)
+  - Di **Cloud/VPS**, tidak ada tunnel yang amankan hop ini, sehingga Caddy sendiri yang harus memegang sertifikat TLS yang valid (lihat bagian [Reverse Proxy (Caddy) Setup](#reverse-proxy-caddy-setup))
 
 ## Platform-Specific Setup
 
@@ -29,6 +28,7 @@ Server kami saat ini merupakan komputer pribadi di Medan, Sumatera Utara dengan 
 - Memory: 15.56 GiB
 - Swap: 8.00 GiB
 - Disk: 474.35 GiB — btrfs
+
 Dikarenakan koneksi internet server ini adad di bawah CGNAT (tidak ada Public IP), kami menggunakan **Cloudflare Tunnel** agar Cloudflare dapat menjangkau server ini tanpa perlu membuka port apapun ke internet.
  
 1. Pastikan `cloudflared` sudah terinstall dan ter-autentikasi (`cloudflared tunnel login`).
@@ -36,18 +36,23 @@ Dikarenakan koneksi internet server ini adad di bawah CGNAT (tidak ada Public IP
 ```sh
    cloudflared tunnel route dns <tunnel name atau tunnel ID> <domain name>
 ```
-3. Pastikan `config.yml` milik `cloudflared` mengarahkan **semua** hostname ke Caddy (port 80), bukan langsung ke container lain — supaya semua keputusan routing tetap berada di satu tempat (Caddyfile):
+3. Pastikan isi `config.yml` di `/etc/cloudflared/config.yml` seperti ini:
 ```yaml
-   tunnel: <tunnel-id>
-   credentials-file: /home/<user>/.cloudflared/<tunnel-id>.json
-   ingress:
-     - hostname: api.aelberthcheong.dev
-       service: http://127.0.0.1:80
-     - hostname: saritebu.aelberthcheong.dev
-       service: http://127.0.0.1:80
-     - hostname: ssh.aelberthcheong.dev
-       service: ssh://localhost:22
-     - service: http_status:404
+    tunnel: <tunnel-id>
+    credentials-file: /home/<user>/.cloudflared/<tunnel-id>.json
+
+    ingress:
+        - hostname: api.aelberthcheong.dev
+          service: https://127.0.0.1:443
+          originRequest:
+            originServerName: api.aelberthcheong.dev
+        - hostname: saritebu.aelberthcheong.dev
+          service: https://127.0.0.1:443
+          originRequest:
+            originServerName: saritebu.aelberthcheong.dev
+        - hostname: ssh.aelberthcheong.dev
+          service: ssh://localhost:22
+        - service: http_status:404
 ```
 4. Restart service setelah perubahan apapun pada `config.yml`:
 ```sh

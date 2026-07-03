@@ -12,7 +12,9 @@ export function generateSessionSecret() {
  * @returns {Buffer}
  */
 export function hashSessionSecret(secret) {
-    return createHash("sha256").update(secret).digest();
+    return createHash("sha256")
+        .update(secret)
+        .digest();
 }
 
 /**

@@ -11,6 +11,9 @@ import transactionRoutes from "./modules/transactions/routes.js";
 import userRoutes from "./modules/users/routes.js";
 import signUpRoutes from "./modules/signup_sessions/routes.js";
 import passwordResetRoutes from "./modules/password_reset_sessions/routes.js";
+import passwordUpdateRoutes from "./modules/password_update_sessions/routes.js";
+import emailAddressUpdateRoutes from "./modules/email_address_update_sessions/routes.js";
+import accountDeletionRoutes from "./modules/account_deletion_sessions/routes.js";
 import requireErrorHandler from "./shared/middlewares/error_handler.js";
 
 const app = express();
@@ -31,8 +34,11 @@ app.use(express.urlencoded({ extended: true, limit: "250kb" }));
 
 app.use("/sign-up", signUpRoutes);
 app.use("/auth", authSesssionRoutes);
-app.use("/password-reset", passwordResetRoutes);
-app.use("/users", userRoutes);
+app.use("/reset-password", passwordResetRoutes);
+app.use("/update-password", passwordUpdateRoutes);
+app.use("/update-email-address", emailAddressUpdateRoutes);
+app.use("/remove-account", accountDeletionRoutes);
+// app.use("/users", userRoutes);
 app.use("/products", productRoutes);
 app.use("/carts", cartRoutes);
 app.use("/transactions", transactionRoutes);

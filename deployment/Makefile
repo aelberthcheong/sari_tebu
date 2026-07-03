@@ -11,7 +11,7 @@ help: ## Display this help message
 	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
 
 build: ## Build the docker containers
-	docker compose build
+	docker compose -f "$(COMPOSE_FILE)" build
 
 up: ## Run backend and frontend containers
 	docker compose -f "$(COMPOSE_FILE)" up -d

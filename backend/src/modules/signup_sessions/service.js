@@ -1,4 +1,4 @@
-import { randomInt, createHash } from "node:crypto";
+import { randomInt, createHash, timingSafeEqual } from "node:crypto";
 import { nanoid } from "nanoid";
 
 import { prisma } from "#/shared/database/index.js";
@@ -40,8 +40,8 @@ export async function createSignupSession(emailAddress) {
             id: nanoid(),
             email_address: emailAddress,
             session_secret_hash: hashSessionSecret(secret),
-            email_code_hash: hashedVerificationCode,
-            is_email_verified: false,
+            email_code_hash: Buffer.from(hashedVerificationCode, "hex"),
+            email_verified_at: new Date(),
             expires_at: tokenLifetime
         },
     });
@@ -61,13 +61,16 @@ export async function verifyEmailAddress(signupSession, verificationCode) {
         .update(verificationCode)
         .digest("hex");
 
-    if (hashedVerificationCode !== signupSession.email_code_hash) {
+    const payloadCode  = Buffer.from(hashedVerificationCode, "hex");
+    const databaseCode = Buffer.from(signupSession.email_code_hash);
+
+    if (payloadCode.length !== databaseCode.length || !timingSafeEqual(payloadCode, databaseCode)) {
         throw ClientError.unprocessable("Invalid verification code.");
     }
 
     await prisma.signupSession.update({
         where: { id: signupSession.id },
-        data: { is_email_verified: true },
+        data: { email_verified_at: new Date() },
     });
 }
 
@@ -83,7 +86,8 @@ export async function refreshVerificationCode(id) {
     await prisma.signupSession.update({
         where: { id: id },
         data: {
-            email_code_hash: hashedVerificationCode
+            email_code_hash: Buffer.from(hashedVerificationCode, "hex"),
+            email_verified_at: null,
         },
     });
 

@@ -25,12 +25,6 @@ export async function getUserById(req, res) {
     });
 }
 
-/**
- * @param {Request} req
- * @param {Response} res
- * @type {import("express").RequestHandler}
- * @returns {Promise<void>}
- */
 export async function updateUser(req, res) {
     const user = await UserService.updateUser(
         req.validatedParams.id,
