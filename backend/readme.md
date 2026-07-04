@@ -23,9 +23,9 @@ Backend ini berjalan di atas runtime Node.js dengan framework Express, beserta p
 - Pastikan telah copy file `.env.example` jadi `.env`
 
 ### Local Development
-1. **Install dependencies dan generate prisma client**
+1. **Install dependencies
 ```sh
-npm run setup
+npm run install 
 ```
 
 2. **Build docker container**
@@ -39,15 +39,16 @@ npx prisma generate        // Generate prisma client
 npx prisma migrate deploy  // Jalankan migration
 ```
 
-4. **Jalankan server**
+4. **Jalankan development server**
 ```sh
 npm run dev
 ```
 
 > [!NOTE]  
-> Credential untuk memasuki adminer dengan kredential: server=database, username=root, password=root, database=
+> Anda dapatkan jalankan command `npx prisma studio` untuk membuka database editor bawaan Prisma
+> Secara default akan dijalankan di http://localhost:51212
 
-> [!NOTE]
+> [!WARNING]
 > Pada `npm run dev` terdapat flag `--import dotenv/config`. Hal ini diperlukan karena Prisma
 > memerlukan env vars (seperti `DB_URL`) untuk melakukan koneksi ke database, dan flag ini
 > memastikan `dotenv` sudah memuat isi `.env` sebelum modul lain (termasuk Prisma adapter MariaDB)
@@ -55,10 +56,7 @@ npm run dev
 >
 > Pada production, flag ini tidak digunakan karena environment variables sudah diatur langsung
 > oleh Docker (`environment:` / `env_file:` pada `docker-compose.yml`), sehingga library `dotenv`
-> menjadi dev-dependencies dan tidak perlu disertakan atau dijalankan saat production.
-## Deployment
-
-Untuk dokumentasi dan panduan mengenai langkah-langkah deployment, silakan ikuti instruksi pada [README DEPLOYMENT](../deployment/readme.md).
+> menjadi dev-dependencies dan tidak perlu saat production.
 
 ## Lisensi
 Proyek ini dilisensikan di bawah Lisensi MIT - lihat [LICENSE](../LICENSE) untuk detailnya.

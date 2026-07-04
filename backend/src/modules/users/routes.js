@@ -4,14 +4,6 @@ import requireAuthSession from "#/shared/middlewares/auth_session.js";
 import requireRateLimit from "#/shared/middlewares/rate_limit.js";
 import requireValidation from "#/shared/middlewares/validation.js";
 
-import {
-    createUser,
-    getUsers,
-    getUserById,
-    updateUser,
-    editUser,
-    deleteUser,
-} from "./controller.js";
 import { createUserSchema } from "./schema.js";
 
 const routes = Router();

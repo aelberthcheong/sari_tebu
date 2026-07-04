@@ -20,7 +20,7 @@ services:
     server:
         build:
             context: ../backend
-            dockerfile: Dockerfile
+            dockerfile: dockerfile
         restart: unless-stopped
         env_file:
             - ../backend/.env.prod
@@ -33,7 +33,7 @@ services:
     frontend:
         build:
             context: ../frontend
-            dockerfile: Dockerfile
+            dockerfile: dockerfile
         restart: unless-stopped
         env_file:
             - ../frontend/.env.prod
@@ -43,7 +43,7 @@ services:
     caddy:
         build:
             context: .
-            dockerfile: Dockerfile
+            dockerfile: dockerfile
         container_name: sari-tebu-reverse-proxy
         restart: unless-stopped
         ports:
