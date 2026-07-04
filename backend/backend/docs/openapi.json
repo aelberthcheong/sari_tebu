@@ -1,0 +1,1883 @@
+{
+  "openapi": "3.0.4",
+  "info": {
+    "title": "Sari Tebu API",
+    "description": "Dokumentasi REST API untuk Sari Tebu, aplikasi POS (Point of Sale) berbasis web. Mencakup pendaftaran akun dengan verifikasi email, manajemen produk, keranjang belanja, sampai proses checkout.\n\nResponse selalu dalam format JSON dengan field status: \"success\" kalau request berhasil, \"fail\" kalau ada kesalahan dari sisi client (misalnya validasi gagal atau resource-nya nggak ada), dan \"error\" kalau ada masalah di server yang nggak terduga.\n\nAutentikasi di sini pakai session token yang disimpan di HTTP-only cookie, jadi bukan Bearer token/JWT seperti yang biasa dipakai di banyak API lain. Karena itu kebanyakan endpoint nggak perlu header Authorization.\n\nUntuk ID resource, formatnya pakai prefix sesuai jenisnya, contoh user-xxxxxxxxxxxxxxxxxxxxx atau product-xxxxxxxxxxxxxxxxxxxxx, di mana bagian setelah prefix itu di-generate pakai nanoid (21 karakter).",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Universitas Mikroskil IF-A Sore Kelompok A",
+      "url": "https://github.com/Mikroskil-IFA-Sore-A/Sari-Tebu"
+    },
+    "license": {
+      "name": "MIT"
+    }
+  },
+  "servers": [
+    {
+        "url": "http://localhost:8080/api",
+        "description": "Local Development server"
+    },
+    {
+        "url": "https://saritebu.aelberthcheong.dev/api",
+        "description": "Production server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Authentication",
+      "description": "Sign up, login, dan session management"
+    },
+    {
+      "name": "Password Management",
+      "description": "Password reset dan update operations"
+    },
+    {
+      "name": "Account Management",
+      "description": "Email update dan account deletion"
+    },
+    {
+      "name": "Products",
+      "description": "Pengelolaan data produk. Memerlukan sesi autentikasi."
+    },
+    {
+      "name": "Cart",
+      "description": "Keranjang belanja milik pengguna. Memerlukan sesi autentikasi."
+    },
+    {
+      "name": "Transactions",
+      "description": "Proses checkout dan riwayat transaksi. Memerlukan sesi autentikasi."
+    }
+  ],
+  "components": {
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Error code"
+          },
+          "message": {
+            "type": "string",
+            "description": "Error message"
+          }
+        },
+        "required": ["message"]
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^user-[A-Za-z0-9_-]{21}$",
+            "description": "Unique user identifier"
+          },
+          "email_address": {
+            "type": "string",
+            "format": "email",
+            "description": "User email address"
+          },
+          "username": {
+            "type": "string",
+            "description": "Username"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Account creation timestamp"
+          }
+        },
+        "required": ["id", "email_address", "username"]
+      },
+      "Product": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^product-[A-Za-z0-9_-]{21}$",
+            "description": "Unique product identifier"
+          },
+          "name": {
+            "type": "string",
+            "description": "Product name"
+          },
+          "price": {
+            "type": "number",
+            "format": "float",
+            "minimum": 0,
+            "description": "Product price"
+          },
+          "stock": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Available stock quantity"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Product creation timestamp"
+          }
+        },
+        "required": ["id", "name", "price", "stock"]
+      },
+      "CartItem": {
+        "type": "object",
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "pattern": "^product-[A-Za-z0-9_-]{21}$",
+            "description": "Product identifier"
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Quantity in cart"
+          },
+          "product": {
+            "$ref": "#/components/schemas/Product"
+          }
+        },
+        "required": ["product_id", "quantity"]
+      },
+      "Cart": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^cart-[A-Za-z0-9_-]{21}$",
+            "description": "Unique cart identifier"
+          },
+          "user_id": {
+            "type": "string",
+            "pattern": "^user-[A-Za-z0-9_-]{21}$",
+            "description": "User who owns the cart"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CartItem"
+            }
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": ["id", "user_id", "items"]
+      },
+      "TransactionItem": {
+        "type": "object",
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "pattern": "^product-[A-Za-z0-9_-]{21}$",
+            "description": "Product identifier"
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "price_at_time": {
+            "type": "number",
+            "format": "float",
+            "description": "Product price at the moment of checkout"
+          },
+          "product": {
+            "$ref": "#/components/schemas/Product"
+          }
+        },
+        "required": ["product_id", "quantity", "price_at_time"]
+      },
+      "Transaction": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^transaction-[A-Za-z0-9_-]{21}$",
+            "description": "Unique transaction identifier"
+          },
+          "user_id": {
+            "type": "string",
+            "pattern": "^user-[A-Za-z0-9_-]{21}$",
+            "description": "User who made the transaction"
+          },
+          "total": {
+            "type": "number",
+            "format": "float",
+            "description": "Total price of the transaction"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TransactionItem"
+            }
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": ["id", "user_id", "total", "items"]
+      }
+    },
+    "responses": {
+      "Unauthorized": {
+        "description": "Unauthorized - Missing or invalid authentication",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Forbidden - Insufficient permissions",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Resource not found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "ValidationError": {
+        "description": "Validation error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "ServerError": {
+        "description": "Internal server error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "CookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "auth_session_token"
+      }
+    }
+  },
+  "paths": {
+    "/sign-up": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Create a new sign-up session",
+        "description": "Initiate the signup process by providing an email address. A verification code will be sent to the email.",
+        "operationId": "createSignUpSession",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "emailAddress": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Email address for signup"
+                  }
+                },
+                "required": ["emailAddress"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Sign-up session created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "email_address": {
+                      "type": "string"
+                    },
+                    "is_email_verified": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "409": {
+            "description": "Email already exists in auth session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Authentication"],
+        "summary": "Cancel signup process",
+        "description": "Cancel and delete the current signup session.",
+        "operationId": "cancelSignUp",
+        "responses": {
+          "204": {
+            "description": "Sign-up session cancelled"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/sign-up/verify-email-address": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Verify email address during signup",
+        "description": "Verify the email address using the code sent to the email. Requires a valid signup session cookie.",
+        "operationId": "verifySignUpEmail",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "pattern": "^\\d{8}$",
+                    "description": "8-digit verification code"
+                  }
+                },
+                "required": ["code"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Email verified successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "is_email_verified": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/sign-up/resend-verification-code": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Resend verification code",
+        "description": "Request a new verification code to be sent to the signup email. Rate limited to 5 requests per 5 minutes.",
+        "operationId": "resendSignUpCode",
+        "responses": {
+          "200": {
+            "description": "Verification code resent successfully"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "description": "Too many requests - rate limit exceeded"
+          }
+        }
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Complete registration",
+        "description": "Finalize the signup process by creating a user account. Requires verified email from signup session and automatically creates an auth session.",
+        "operationId": "registerUser",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 30,
+                    "description": "Desired username"
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 8,
+                    "maxLength": 100,
+                    "description": "Account password"
+                  }
+                },
+                "required": ["username", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User registered successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            },
+            "headers": {
+              "Set-Cookie": {
+                "schema": {
+                  "type": "string",
+                  "example": "auth_session_token=...; Path=/; HttpOnly"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Login user",
+        "description": "Authenticate user with email and password. Creates a new auth session. Rate limited to 5 requests per minute.",
+        "operationId": "loginUser",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "emailAddress": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "User email address"
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 8,
+                    "maxLength": 100,
+                    "description": "User password"
+                  }
+                },
+                "required": ["emailAddress", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            },
+            "headers": {
+              "Set-Cookie": {
+                "schema": {
+                  "type": "string",
+                  "example": "auth_session_token=...; Path=/; HttpOnly"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "description": "Invalid email or password",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many login attempts - rate limit exceeded"
+          }
+        }
+      }
+    },
+    "/auth": {
+      "get": {
+        "tags": ["Authentication"],
+        "summary": "Get current session",
+        "description": "Retrieve information about the currently authenticated user. Used to validate active sessions.",
+        "operationId": "getCurrentSession",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current session retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Authentication"],
+        "summary": "Logout",
+        "description": "Logout the current user by deleting the active auth session.",
+        "operationId": "logout",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Logged out successfully"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/reset-password": {
+      "post": {
+        "tags": ["Password Management"],
+        "summary": "Create password reset session",
+        "description": "Initiate password reset process. Always returns success (anti-enumeration), but verification code is only sent if email is registered.",
+        "operationId": "createPasswordResetSession",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "emailAddress": {
+                    "type": "string",
+                    "format": "email"
+                  }
+                },
+                "required": ["emailAddress"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset session initiated (always succeeds)"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Password Management"],
+        "summary": "Reset password",
+        "description": "Set a new password after email verification.",
+        "operationId": "resetPassword",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "password": {
+                    "type": "string",
+                    "minLength": 8,
+                    "maxLength": 100
+                  }
+                },
+                "required": ["password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset successfully"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Password Management"],
+        "summary": "Cancel password reset",
+        "description": "Cancel the ongoing password reset process.",
+        "operationId": "cancelPasswordReset",
+        "responses": {
+          "204": {
+            "description": "Password reset cancelled"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/reset-password/verify-email-address": {
+      "post": {
+        "tags": ["Password Management"],
+        "summary": "Verify reset email",
+        "description": "Verify the email using the code sent. Requires valid password reset session.",
+        "operationId": "verifyPasswordResetEmail",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "pattern": "^\\d{8}$"
+                  }
+                },
+                "required": ["code"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Email verified"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/reset-password/resend-verification-code": {
+      "post": {
+        "tags": ["Password Management"],
+        "summary": "Resend password reset code",
+        "description": "Request a new verification code for password reset. Rate limited to 5 requests per 5 minutes.",
+        "operationId": "resendPasswordResetCode",
+        "responses": {
+          "200": {
+            "description": "Code resent"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        }
+      }
+    },
+    "/update-password": {
+      "post": {
+        "tags": ["Password Management"],
+        "summary": "Initiate password update",
+        "description": "Start the password update process for authenticated user. Creates a temporary session token.",
+        "operationId": "initiatePasswordUpdate",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Password update session created"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Password Management"],
+        "summary": "Update password",
+        "description": "Set a new password after current password verification.",
+        "operationId": "updatePassword",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "newPassword": {
+                    "type": "string",
+                    "minLength": 8,
+                    "maxLength": 100
+                  }
+                },
+                "required": ["newPassword"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password updated successfully"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Password Management"],
+        "summary": "Cancel password update",
+        "description": "Cancel the password update process.",
+        "operationId": "cancelPasswordUpdate",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Password update cancelled"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/update-password/verify-password": {
+      "post": {
+        "tags": ["Password Management"],
+        "summary": "Verify current password",
+        "description": "Verify the user's current password before allowing password change. Rate limited to 5 requests per minute.",
+        "operationId": "verifyCurrentPassword",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "currentPassword": {
+                    "type": "string",
+                    "maxLength": 100
+                  }
+                },
+                "required": ["currentPassword"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current password verified"
+          },
+          "401": {
+            "description": "Invalid password",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        }
+      }
+    },
+    "/update-email-address": {
+      "post": {
+        "tags": ["Account Management"],
+        "summary": "Initiate email update",
+        "description": "Start the email update process. Verification code is sent to the new email address.",
+        "operationId": "initiateEmailUpdate",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "newEmailAddress": {
+                    "type": "string",
+                    "format": "email"
+                  }
+                },
+                "required": ["newEmailAddress"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Email update session created"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Account Management"],
+        "summary": "Confirm email update",
+        "description": "Apply the email address change after verification.",
+        "operationId": "confirmEmailUpdate",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Email address updated successfully"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Account Management"],
+        "summary": "Cancel email update",
+        "description": "Cancel the email update process.",
+        "operationId": "cancelEmailUpdate",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Email update cancelled"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/update-email-address/verify-email-address": {
+      "post": {
+        "tags": ["Account Management"],
+        "summary": "Verify new email address",
+        "description": "Verify the new email address using the code sent.",
+        "operationId": "verifyNewEmailAddress",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "pattern": "^\\d{8}$"
+                  }
+                },
+                "required": ["code"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "New email verified"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/update-email-address/resend-verification-code": {
+      "post": {
+        "tags": ["Account Management"],
+        "summary": "Resend email verification code",
+        "description": "Request a new verification code for email update. Rate limited to 5 requests per 5 minutes.",
+        "operationId": "resendEmailVerificationCode",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Verification code resent"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        }
+      }
+    },
+    "/remove-account": {
+      "post": {
+        "tags": ["Account Management"],
+        "summary": "Initiate account deletion",
+        "description": "Start the account deletion process. Notification email is sent. Rate limited to 3 requests per 10 minutes.",
+        "operationId": "initiateAccountDeletion",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Account deletion session created"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Account Management"],
+        "summary": "Delete account",
+        "description": "Permanently delete the user account. Requires verified password.",
+        "operationId": "deleteAccount",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Account deleted permanently"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/remove-account/verify-password": {
+      "post": {
+        "tags": ["Account Management"],
+        "summary": "Verify password for deletion",
+        "description": "Confirm account deletion by verifying the user's password.",
+        "operationId": "verifyPasswordForDeletion",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "password": {
+                    "type": "string",
+                    "maxLength": 100
+                  }
+                },
+                "required": ["password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password verified"
+          },
+          "401": {
+            "description": "Invalid password",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/remove-account/cancel": {
+      "delete": {
+        "tags": ["Account Management"],
+        "summary": "Cancel account deletion",
+        "description": "Cancel the account deletion process.",
+        "operationId": "cancelAccountDeletion",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Account deletion cancelled"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/products": {
+      "get": {
+        "tags": ["Products"],
+        "summary": "List products",
+        "description": "Retrieve a list of products with optional filtering by name.",
+        "operationId": "listProducts",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "description": "Filter products by name",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of products",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Product"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      },
+      "post": {
+        "tags": ["Products"],
+        "summary": "Create product",
+        "description": "Create a new product in the catalog.",
+        "operationId": "createProduct",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Product name"
+                  },
+                  "price": {
+                    "type": "number",
+                    "format": "float",
+                    "minimum": 0,
+                    "description": "Product price"
+                  },
+                  "stock": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Initial stock quantity"
+                  }
+                },
+                "required": ["name", "price", "stock"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Product created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/products/{id}": {
+      "get": {
+        "tags": ["Products"],
+        "summary": "Get product",
+        "description": "Retrieve details of a specific product.",
+        "operationId": "getProduct",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Product ID",
+            "schema": {
+              "type": "string",
+              "pattern": "^product-[A-Za-z0-9_-]{21}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "put": {
+        "tags": ["Products"],
+        "summary": "Replace product",
+        "description": "Completely replace a product's details.",
+        "operationId": "replaceProduct",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Product ID",
+            "schema": {
+              "type": "string",
+              "pattern": "^product-[A-Za-z0-9_-]{21}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "price": {
+                    "type": "number",
+                    "format": "float",
+                    "minimum": 0
+                  },
+                  "stock": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "required": ["name", "price", "stock"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Product updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Products"],
+        "summary": "Update product",
+        "description": "Partially update a product (at least one field required).",
+        "operationId": "updateProduct",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Product ID",
+            "schema": {
+              "type": "string",
+              "pattern": "^product-[A-Za-z0-9_-]{21}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "price": {
+                    "type": "number",
+                    "format": "float",
+                    "minimum": 0
+                  },
+                  "stock": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Product updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Products"],
+        "summary": "Delete product",
+        "description": "Delete a product from the catalog.",
+        "operationId": "deleteProduct",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Product ID",
+            "schema": {
+              "type": "string",
+              "pattern": "^product-[A-Za-z0-9_-]{21}$"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Product deleted"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/carts": {
+      "get": {
+        "tags": ["Cart"],
+        "summary": "List carts",
+        "description": "Retrieve all carts for the authenticated user.",
+        "operationId": "listCarts",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of carts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Cart"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      },
+      "post": {
+        "tags": ["Cart"],
+        "summary": "Create cart",
+        "description": "Create a new shopping cart for the authenticated user.",
+        "operationId": "createCart",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Cart created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Cart"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/carts/{cartId}": {
+      "get": {
+        "tags": ["Cart"],
+        "summary": "Get cart",
+        "description": "Retrieve details of a specific cart.",
+        "operationId": "getCart",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "cartId",
+            "in": "path",
+            "required": true,
+            "description": "Cart ID",
+            "schema": {
+              "type": "string",
+              "pattern": "^cart-[A-Za-z0-9_-]{21}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cart details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Cart"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Cart"],
+        "summary": "Delete cart",
+        "description": "Delete a cart and all its items.",
+        "operationId": "deleteCart",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "cartId",
+            "in": "path",
+            "required": true,
+            "description": "Cart ID",
+            "schema": {
+              "type": "string",
+              "pattern": "^cart-[A-Za-z0-9_-]{21}$"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Cart deleted"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/carts/{cartId}/items": {
+      "post": {
+        "tags": ["Cart"],
+        "summary": "Add item to cart",
+        "description": "Add a product to a cart or increase quantity if already present.",
+        "operationId": "addCartItem",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "cartId",
+            "in": "path",
+            "required": true,
+            "description": "Cart ID",
+            "schema": {
+              "type": "string",
+              "pattern": "^cart-[A-Za-z0-9_-]{21}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "product_id": {
+                    "type": "string",
+                    "pattern": "^product-[A-Za-z0-9_-]{21}$",
+                    "description": "Product to add"
+                  },
+                  "quantity": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Quantity to add"
+                  }
+                },
+                "required": ["product_id", "quantity"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Item added to cart",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartItem"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "description": "Cart or product not found"
+          }
+        }
+      }
+    },
+    "/carts/{cartId}/items/{productId}": {
+      "patch": {
+        "tags": ["Cart"],
+        "summary": "Update cart item",
+        "description": "Update the quantity of an item in the cart.",
+        "operationId": "updateCartItem",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "cartId",
+            "in": "path",
+            "required": true,
+            "description": "Cart ID",
+            "schema": {
+              "type": "string",
+              "pattern": "^cart-[A-Za-z0-9_-]{21}$"
+            }
+          },
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "description": "Product ID",
+            "schema": {
+              "type": "string",
+              "pattern": "^product-[A-Za-z0-9_-]{21}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "quantity": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": ["quantity"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Item updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartItem"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Cart"],
+        "summary": "Remove item from cart",
+        "description": "Remove a product from the cart.",
+        "operationId": "removeCartItem",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "cartId",
+            "in": "path",
+            "required": true,
+            "description": "Cart ID",
+            "schema": {
+              "type": "string",
+              "pattern": "^cart-[A-Za-z0-9_-]{21}$"
+            }
+          },
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "description": "Product ID",
+            "schema": {
+              "type": "string",
+              "pattern": "^product-[A-Za-z0-9_-]{21}$"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Item removed"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/transactions": {
+      "get": {
+        "tags": ["Transactions"],
+        "summary": "List transactions",
+        "description": "Retrieve all transactions for the authenticated user.",
+        "operationId": "listTransactions",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of transactions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Transaction"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      },
+      "post": {
+        "tags": ["Transactions"],
+        "summary": "Checkout",
+        "description": "Process a checkout transaction from an existing cart. This empties and deletes the cart, decrements product stock, and creates a transaction record.",
+        "operationId": "checkout",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "cartId": {
+                    "type": "string",
+                    "pattern": "^cart-[A-Za-z0-9_-]{21}$",
+                    "description": "Cart to check out"
+                  }
+                },
+                "required": ["cartId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Transaction created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Transaction"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "description": "Cart not found or does not belong to the user"
+          }
+        }
+      }
+    },
+    "/transactions/{transactionId}": {
+      "get": {
+        "tags": ["Transactions"],
+        "summary": "Get transaction",
+        "description": "Retrieve details of a specific transaction.",
+        "operationId": "getTransaction",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "transactionId",
+            "in": "path",
+            "required": true,
+            "description": "Transaction ID",
+            "schema": {
+              "type": "string",
+              "pattern": "^transaction-[A-Za-z0-9_-]{21}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Transaction details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Transaction"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    }
+  }
+}

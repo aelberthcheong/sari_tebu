@@ -1,0 +1,32 @@
+# https://caddyserver.com/docs/caddyfile
+#
+# Caddyfile ini identical, baik dijalankan dari Cloudflare Tunnel (Tanpa public IP) e.g. home server
+# maupun secara langsung pada host dengan public IP e.g. DigitalOcean Droplet.
+#
+# SSL/TLS Certification nya diperoleh melalui tantangan DNS-01 melalui API cloudflare
+# yang tidak memerlukan akses masuk (inbound) kepada machine sehinnga 
+# cara kerjanya tetap sama di kedua Environment tersebut.
+
+# Optional, namun tanpa ini jika ada yang salah tidak akan dapat notifikasi dari Let's Encrypt
+{
+    email {$ACME_EMAIL}
+}
+
+*.kelompoka.tech {
+    tls {
+        dns cloudflare {$CLOUDFLARE_API_TOKEN}
+    }
+
+    # API calls proxy ke server (backend)
+    handle /api/* {
+        reverse_proxy server:8080
+    }
+
+    # Yang lain proxy ke frontend
+    handle {
+        reverse_proxy frontend:80
+    }
+}
+
+import Caddyfile.d/*.caddyfile
+
