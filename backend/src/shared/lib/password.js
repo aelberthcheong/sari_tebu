@@ -1,3 +1,5 @@
+import crypto from "node:crypto";
+
 export async function verifyUserPasswordStrength(password) {
     const passwordHash = crypto
         .createHash("sha256")
