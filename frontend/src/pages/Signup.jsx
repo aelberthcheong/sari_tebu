@@ -202,95 +202,22 @@ function StepVerify({ email, onNext, onCancel }) {
     );
 }
 
-const ROLE_OPTIONS = [
-    {
-        value: "KASIR",
-        label: "Kasir",
-        description: "Akses ke POS untuk transaksi harian dan lihat produk.",
-    },
-    {
-        value: "ADMIN",
-        label: "Admin",
-        description: "Kelola produk & stok, lihat semua transaksi toko.",
-    },
-    {
-        value: "OWNER",
-        label: "Pemilik (Owner)",
-        description: "Akses penuh: produk, semua transaksi, dan pengaturan toko.",
-    },
-];
-
-/**
- * Pemilih role, dibuat manual (bukan lewat komponen library) mengikuti pola
- * Badge/IconButton di project ini, karena komponen radio/select belum
- * terverifikasi tersedia di versi @astryxdesign/core yang terpasang.
- */
-function RoleSelector({ value, onChange }) {
-    return (
-        <VStack gap={2} hAlign="stretch">
-            <Text type="supporting" weight="bold" color="secondary">
-                Daftar sebagai
-            </Text>
-            {ROLE_OPTIONS.map((option) => {
-                const isSelected = value === option.value;
-                return (
-                    <label
-                        key={option.value}
-                        style={{
-                            display: "flex",
-                            alignItems: "flex-start",
-                            gap: 10,
-                            padding: "10px 12px",
-                            borderRadius: 10,
-                            border: isSelected
-                                ? "2px solid var(--color-accent, #2563eb)"
-                                : "1px solid var(--color-border)",
-                            background: isSelected
-                                ? "var(--color-accent-muted, rgba(37,99,235,0.06))"
-                                : "transparent",
-                            cursor: "pointer",
-                            transition: "all 0.15s ease",
-                        }}>
-                        <input
-                            type="radio"
-                            name="role"
-                            value={option.value}
-                            checked={isSelected}
-                            onChange={() => onChange(option.value)}
-                            style={{ marginTop: 3 }}
-                        />
-                        <div>
-                            <Text type="supporting" weight="bold">
-                                {option.label}
-                            </Text>
-                            <Text type="supporting" color="secondary" size="sm">
-                                {option.description}
-                            </Text>
-                        </div>
-                    </label>
-                );
-            })}
-        </VStack>
-    );
-}
-
 function StepPassword({ email, onComplete }) {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
-    const [role, setRole] = useState("KASIR");
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
 
     const handleFinalize = async (e) => {
         e.preventDefault();
         
-        // Front-end matches backend Joi schema + verifyUserPasswordPattern validation
+        // Front-end matches Joi schema validation sizes
         if (username.length < 3 || username.length > 30) {
             setError("Username must be between 3 and 30 characters long");
             return;
         }
-        if (password.length < 10 || password.length > 100) {
-            setError("Password must be between 10 and 100 characters long");
+        if (password.length < 8 || password.length > 100) {
+            setError("Password must be between 8 and 100 characters long");
             return;
         }
         setIsLoading(true);
@@ -302,7 +229,7 @@ function StepPassword({ email, onComplete }) {
                 method: "POST",
                 credentials: "include",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username, password, role }),
+                body: JSON.stringify({ username, password }),
             });
 
             const data = await res.json().catch(() => ({}));
@@ -349,7 +276,7 @@ function StepPassword({ email, onComplete }) {
                 <TextInput
                     label="Password"
                     type="password"
-                    placeholder="Minimal 10 karakter"
+                    placeholder="Enter password"
                     size="lg"
                     name="new-password"
                     autocomplete="new-password" /* Prompts a secure "Save Password" box paired to the hidden email input above */
@@ -360,8 +287,6 @@ function StepPassword({ email, onComplete }) {
                     }}
                     status={error ? { type: "error", message: error } : undefined}
                 />
-
-                <RoleSelector value={role} onChange={setRole} />
 
                 <Button 
                     label="Create Account" 
@@ -411,24 +336,8 @@ export default function SignUp() {
         }, 300);
     };
 
-    const goBack = () => {
-        if (step === 1) {
-            navigate("/");
-            return;
-        }
-        // Step 2 (verifikasi) dan step 3 (set password) sama-sama butuh
-        // signupSession yang masih aktif dan sudah/belum ter-verifikasi.
-        // Cara paling aman untuk "mundur" adalah membatalkan sesi signup
-        // yang berjalan lalu kembali ke step 1, supaya user bisa mengganti
-        // email atau mulai ulang tanpa state yang nyangkut di backend.
-        handleCancelSignup();
-    };
-
     return (
-        <AuthSplitLayout
-            isLoading={pageSkeleton}
-            onBack={goBack}
-            backLabel={step === 1 ? "Kembali ke Beranda" : "Kembali"}>
+        <AuthSplitLayout isLoading={pageSkeleton}>
             {step === 1 && (
                 <StepEmail 
                     onNext={(validEmail) => transitionToStep(2, validEmail)} 

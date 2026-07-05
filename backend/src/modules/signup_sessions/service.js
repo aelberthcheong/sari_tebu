@@ -41,7 +41,7 @@ export async function createSignupSession(emailAddress) {
             email_address: emailAddress,
             session_secret_hash: hashSessionSecret(secret),
             email_code_hash: Buffer.from(hashedVerificationCode, "hex"),
-            email_verified_at: null,
+            email_verified_at: new Date(),
             expires_at: tokenLifetime
         },
     });

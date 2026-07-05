@@ -1,7 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router";
 
 import RequireAuth from "#/components/RequireAuth.jsx";
-import RequireRole from "#/components/RequireRole.jsx";
 import RedirectIfAuthed from "#/components/RedirectIfAuthed.jsx";
 import { AuthProvider } from "#/context/AuthContext.jsx";
 import { ToastProvider } from "#/context/ToastContext.jsx";
@@ -10,12 +9,10 @@ import Home from "#/pages/Home.jsx";
 import Login from "#/pages/Login.jsx";
 import Signup from "#/pages/Signup.jsx";
 import ResetPassword from "#/pages/ResetPassword.jsx";
-import Dashboard from "#/pages/Dashboard.jsx";
 import Pos from "#/pages/Pos.jsx";
 import Products from "#/pages/Products.jsx";
 import Transactions from "#/pages/Transactions.jsx";
 import Settings from "#/pages/Settings.jsx";
-import GuestPos from "#/pages/GuestPos.jsx";
 
 export default function App() {
     return (
@@ -56,18 +53,6 @@ export default function App() {
                             }
                         />
 
-                        <Route path="/guest" element={<GuestPos />} />
-
-                        <Route
-                            path="/dashboard"
-                            element={
-                                <RequireAuth>
-                                    <RequireRole allowedRoles={["OWNER", "ADMIN"]}>
-                                        <Dashboard />
-                                    </RequireRole>
-                                </RequireAuth>
-                            }
-                        />
                         <Route
                             path="/pos"
                             element={
@@ -80,9 +65,7 @@ export default function App() {
                             path="/products"
                             element={
                                 <RequireAuth>
-                                    <RequireRole allowedRoles={["OWNER", "ADMIN"]}>
-                                        <Products />
-                                    </RequireRole>
+                                    <Products />
                                 </RequireAuth>
                             }
                         />
@@ -102,6 +85,9 @@ export default function App() {
                                 </RequireAuth>
                             }
                         />
+
+                        {/* Kompatibilitas: url lama /dashboard diarahkan ke /pos */}
+                        <Route path="/dashboard" element={<Navigate to="/pos" replace />} />
 
                         <Route path="*" element={<Navigate to="/" replace />} />
                     </Routes>

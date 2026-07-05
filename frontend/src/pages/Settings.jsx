@@ -500,7 +500,7 @@ export default function Settings() {
     const [activeModal, setActiveModal] = useState(null); // "password" | "email" | "delete" | null
 
     return (
-        <AppLayout title="Pengaturan Akun" subtitle="Kelola informasi login dan keamanan akunmu.">
+        <AppLayout title="Pengaturan Akun">
             <VStack gap={4} hAlign="stretch" style={{ maxWidth: 640 }}>
                 <Text type="body" color="secondary">
                     Kelola informasi keamanan dan akun kasir kamu di sini.

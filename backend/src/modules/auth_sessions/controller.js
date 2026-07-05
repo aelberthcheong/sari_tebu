@@ -2,12 +2,11 @@ import mail from "#/shared/email/index.js";
 import * as AuthSessionService from "./service.js";
 
 export async function register(req, res) {
-    const { username, password, role } = req.validatedBody;
+    const { username, password } = req.validatedBody;
     const { token, user } = await AuthSessionService.register(
         req.signupSession,
         username,
         password,
-        role,
     );
 
     // signup_session_token sudah tidak relevan lagi setelah register berhasil.
@@ -32,7 +31,6 @@ export async function register(req, res) {
                 id: user.id,
                 email_address: user.email_address,
                 username: user.username,
-                role: user.role,
             },
         },
     });
@@ -59,7 +57,6 @@ export async function login(req, res) {
                 id: user.id,
                 email_address: user.email_address,
                 username: user.username,
-                role: user.role,
             },
         },
     });
@@ -84,12 +81,6 @@ export async function getCurrentSession(req, res) {
                 id: req.authSession.id,
                 user_id: req.authSession.user_id,
                 expires_at: req.authSession.expires_at,
-            },
-            user: {
-                id: req.user.id,
-                email_address: req.user.email_address,
-                username: req.user.username,
-                role: req.user.role,
             },
         },
     });

@@ -58,7 +58,7 @@ const FEATURES = [
 
 const NAV_HEIGHT = 64;
 
-function TopBar({ onLogin, onSignup, onGuest }) {
+function TopBar({ onLogin, onSignup }) {
     return (
         <div
             style={{
@@ -80,7 +80,6 @@ function TopBar({ onLogin, onSignup, onGuest }) {
                 </Text>
             </HStack>
             <HStack gap={2}>
-                <Button label="Coba sebagai Tamu" variant="secondary" size="md" onClick={onGuest} />
                 <Button label="Masuk" variant="secondary" size="md" onClick={onLogin} />
                 <Button label="Daftar" variant="primary" size="md" onClick={onSignup} />
             </HStack>
@@ -90,7 +89,7 @@ function TopBar({ onLogin, onSignup, onGuest }) {
 
 export default function Home() {
     const navigate = useNavigate();
-    const { status, enterGuestMode } = useAuth();
+    const { status } = useAuth();
     const [checkingSession, setCheckingSession] = useState(true);
 
     useEffect(() => {
@@ -99,17 +98,11 @@ export default function Home() {
 
     if (checkingSession) return null;
 
-    const handleGuest = () => {
-        enterGuestMode();
-        navigate("/guest");
-    };
-
     return (
         <div style={{ minHeight: "100%", background: "var(--color-background-body)" }}>
             <TopBar
                 onLogin={() => navigate("/login")}
                 onSignup={() => navigate("/signup")}
-                onGuest={handleGuest}
             />
 
             {/* Hero */}
@@ -124,20 +117,6 @@ export default function Home() {
                         Sari Tebu membantu kamu mengelola produk, transaksi, dan stok
                         dalam satu aplikasi kasir yang cepat, aman, dan mudah digunakan.
                     </Text>
-                    <HStack gap={2}>
-                        <Button
-                            label="Buat Akun Sekarang"
-                            variant="primary"
-                            size="lg"
-                            onClick={() => navigate("/signup")}
-                        />
-                        <Button
-                            label="Lihat Dulu (Mode Tamu)"
-                            variant="secondary"
-                            size="lg"
-                            onClick={handleGuest}
-                        />
-                    </HStack>
                 </VStack>
             </div>
 

@@ -24,11 +24,8 @@ app.set("trust proxy", process.env.REVERSE_PROXY);
 app.use(cookieParser());
 app.use(helmet());
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
-// NOTE: Limit dinaikkan ke 5mb untuk menampung payload gambar produk yang
-// dikirim sebagai base64 data URL (lihat products/schema.js untuk validasi
-// ukuran & format gambar yang lebih ketat per-field).
-app.use(express.json({ limit: "5mb" }));
-app.use(express.urlencoded({ extended: true, limit: "5mb" }));
+app.use(express.json({ limit: "250kb" }));
+app.use(express.urlencoded({ extended: true, limit: "250kb" }));
 app.use("/api", requireApiDocumentation());
 
 app.use("/api/sign-up", signUpRoutes);

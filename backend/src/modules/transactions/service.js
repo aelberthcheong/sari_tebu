@@ -55,31 +55,20 @@ export async function checkout(cartId, userId) {
     });
 }
 
-/**
- * @param {{id: string, role: string}} user - user yang sedang login (req.user)
- */
-export async function listTransactions(user) {
-    const isManager = user.role === "OWNER" || user.role === "ADMIN";
+export async function listTransactions(userId) {
     return prisma.transaction.findMany({
-        // OWNER/ADMIN bisa lihat semua transaksi toko (untuk laporan penjualan),
-        // sementara KASIR hanya boleh lihat transaksi yang ia buat sendiri.
-        where: isManager ? {} : { user_id: user.id },
-        include: { items: { include: { product: true } }, user: { select: { username: true } } },
+        where: { user_id: userId },
+        include: { items: { include: { product: true } } },
         orderBy: { created_at: "desc" },
     });
 }
 
-/**
- * @param {string} transactionId
- * @param {{id: string, role: string}} user - user yang sedang login (req.user)
- */
-export async function getTransaction(transactionId, user) {
-    const isManager = user.role === "OWNER" || user.role === "ADMIN";
+export async function getTransaction(transactionId, userId) {
     const transaction = await prisma.transaction.findUnique({
         where: { id: transactionId },
-        include: { items: { include: { product: true } }, user: { select: { username: true } } },
+        include: { items: { include: { product: true } } },
     });
-    if (!transaction || (!isManager && transaction.user_id !== user.id)) {
+    if (!transaction || transaction.user_id !== userId) {
         throw ClientError.notFound("Transaction tidak ditemukan");
     }
     return transaction;

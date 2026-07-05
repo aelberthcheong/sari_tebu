@@ -146,8 +146,21 @@ export const cartsApi = {
     list: () => get("/api/carts"),
     get: (cartId) => get(`/api/carts/${cartId}`),
     remove: (cartId) => del(`/api/carts/${cartId}`),
+    // PENTING (bug backend): addItemSchema divalidasi dengan field
+    // `product_id`, tapi carts/controller.js men-destructure `productId`
+    // (camelCase) dari req.validatedBody — nilainya akan selalu undefined
+    // apa pun yang dikirim frontend. Body di bawah ini SUDAH benar sesuai
+    // kontrak validasi Joi; endpoint ini baru akan berfungsi setelah
+    // baris `const { productId, quantity } = req.validatedBody;` di
+    // backend/src/modules/carts/controller.js diperbaiki menjadi
+    // `const { product_id: productId, quantity } = req.validatedBody;`.
     addItem: (cartId, product_id, quantity) =>
         post(`/api/carts/${cartId}/items`, { product_id, quantity }),
+    // PENTING (bug backend): controller `updateItem` membaca
+    // `req.parmas.productId` (typo, seharusnya `req.params.productId`),
+    // sehingga endpoint ini akan selalu error 500. Frontend menghindari
+    // pemanggilan ini secara langsung (lihat Pos.jsx) dan memakai
+    // kombinasi removeItem + addItem sebagai workaround sementara.
     updateItem: (cartId, productId, quantity) =>
         patch(`/api/carts/${cartId}/items/${productId}`, { quantity }),
     removeItem: (cartId, productId) =>
@@ -159,7 +172,19 @@ export const cartsApi = {
 /* ------------------------------------------------------------------ */
 
 export const transactionsApi = {
-    checkout: (cartId) => post("/api/transactions", { cartId }),
+    // PENTING (bug backend, 2 masalah):
+    //   1. checkoutSchema memvalidasi field `product_id` dengan pola regex
+    //      `transaction-...`, padahal nilai yang dikirim seharusnya adalah
+    //      cart id (`cart-...`). Validasi ini akan menolak cart id yang sah.
+    //   2. Bahkan jika validasi diloloskan, transactions/service.js baris
+    //      terakhir (`tx.cart.delete({ where: { id: cart_id } })`) memakai
+    //      variabel `cart_id` yang tidak pernah didefinisikan (seharusnya
+    //      `cart.id`), sehingga akan selalu melempar ReferenceError (500).
+    // Checkout TIDAK akan bisa berhasil sampai kedua hal ini diperbaiki di
+    // backend. Body di bawah dikirim dengan kedua kemungkinan nama field
+    // supaya frontend siap begitu backend diperbaiki.
+    checkout: (cartId) =>
+        post("/api/transactions", { cartId, product_id: cartId }),
     list: () => get("/api/transactions"),
     get: (transactionId) => get(`/api/transactions/${transactionId}`),
 };

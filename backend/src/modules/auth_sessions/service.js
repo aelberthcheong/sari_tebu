@@ -20,9 +20,8 @@ import {
  * @param {object} signupSession - req.signupSession, dari requireSignupSession()
  * @param {string} username
  * @param {string} password
- * @param {"OWNER"|"ADMIN"|"KASIR"} [role="KASIR"] - Role yang dipilih user saat signup.
  */
-export async function register(signupSession, username, password, role = "KASIR") {
+export async function register(signupSession, username, password) {
     if (!signupSession.email_verified_at) {
         throw ClientError.forbidden("Alamat email belum di-verifikasi");
     }
@@ -58,7 +57,6 @@ export async function register(signupSession, username, password, role = "KASIR"
                 email_address: signupSession.email_address,
                 username,
                 password_hash: passwordHash,
-                role,
             },
         });
         await tx.signupSession.delete({ where: { id: signupSession.id } });

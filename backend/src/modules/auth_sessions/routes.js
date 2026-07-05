@@ -3,7 +3,6 @@ import requireRateLimit from "#/shared/middlewares/rate_limit.js";
 import requireValidation from "#/shared/middlewares/validation.js";
 import requireSignupSession from "#/shared/middlewares/signup_session.js";
 import requireAuthSession from "#/shared/middlewares/auth_session.js";
-import requireRole from "#/shared/middlewares/role.js";
 import { registerSchema, loginSchema } from "./schema.js";
 import { register, login, logout, getCurrentSession } from "./controller.js";
 
@@ -43,7 +42,6 @@ routes.delete("/", [
 
 routes.get("/", [
     requireAuthSession(),
-    requireRole(),
     getCurrentSession,
 ]);
 

@@ -70,10 +70,7 @@ export default function Login() {
 
     return (
         /* Pass the loading state straight to the reusable layout wrapper */
-        <AuthSplitLayout
-            isLoading={pageLoading}
-            onBack={() => navigate("/")}
-            backLabel="Kembali ke Beranda">
+        <AuthSplitLayout isLoading={pageLoading}>
             {isSuccess ? (
                 <EmptyState
                     title="You're signed in"

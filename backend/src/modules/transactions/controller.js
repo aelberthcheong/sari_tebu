@@ -13,7 +13,9 @@ export async function checkout(req, res) {
 }
 
 export async function listTransactions(req, res) {
-    const transactions = await TransactionService.listTransactions(req.user);
+    const transactions = await TransactionService.listTransactions(
+        req.authSession.user_id,
+    );
     res.status(200).json({
         status: "success",
         data: transactions,
@@ -23,7 +25,7 @@ export async function listTransactions(req, res) {
 export async function getTransaction(req, res) {
     const transaction = await TransactionService.getTransaction(
         req.params.transactionId,
-        req.user,
+        req.authSession.user_id,
     );
     res.status(200).json({
         status: "success",

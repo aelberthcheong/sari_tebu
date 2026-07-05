@@ -3,9 +3,8 @@ import { Center } from "@astryxdesign/core/Center";
 import { Grid } from "@astryxdesign/core/Grid";
 import { Icon } from "@astryxdesign/core/Icon";
 import { VStack, HStack } from "@astryxdesign/core/Layout";
-import { Link } from "@astryxdesign/core/Link";
 import { Text } from "@astryxdesign/core/Text";
-import { GlobeAltIcon, ArrowLeftIcon } from "@heroicons/react/24/outline";
+import { GlobeAltIcon } from "@heroicons/react/24/outline";
 
 const COVER_IMAGE_URL = "/tebu.jpg";
 const COLUMN_MIN_WIDTH = 240;
@@ -120,7 +119,7 @@ function FormSkeleton() {
     );
 }
 
-export function AuthSplitLayout({ children, isLoading = false, onBack, backLabel = "Kembali" }) {
+export function AuthSplitLayout({ children, isLoading = false }) {
     return (
         <Center axis="both" style={pageStyle}>
             <style>{AUTH_LAYOUT_CSS}</style>
@@ -142,26 +141,11 @@ export function AuthSplitLayout({ children, isLoading = false, onBack, backLabel
                                 flexDirection: "column",
                             }}>
                             <VStack gap={4} height="100%">
-                                <HStack gap={2} vAlign="center" style={{ justifyContent: "space-between" }}>
-                                    <HStack gap={2} vAlign="center">
-                                        <Icon icon={GlobeAltIcon} />
-                                        <Text type="body" weight="bold">
-                                            Sari Tebu
-                                        </Text>
-                                    </HStack>
-                                    {onBack && !isLoading && (
-                                        <Link
-                                            onClick={onBack}
-                                            href="#"
-                                            size="sm"
-                                            color="secondary"
-                                            type="supporting">
-                                            <HStack gap={1} vAlign="center">
-                                                <Icon icon={ArrowLeftIcon} size="sm" />
-                                                <span>{backLabel}</span>
-                                            </HStack>
-                                        </Link>
-                                    )}
+                                <HStack gap={2} vAlign="center">
+                                    <Icon icon={GlobeAltIcon} />
+                                    <Text type="body" weight="bold">
+                                        Sari Tebu
+                                    </Text>
                                 </HStack>
 
                                 <div
