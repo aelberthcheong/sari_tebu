@@ -1,8 +1,8 @@
-SARI_TEBU_DIR=/home/akunsialbert/Projects/Sari-Tebu
-COMPOSE_FILE=$(SARI_TEBU_DIR)/deployment/compose.yaml
+SARI_TEBU_DIR?= /home/akunsialbert/Projects/Sari-Tebu
+COMPOSE_FILE := $(SARI_TEBU_DIR)/deployment/compose.yaml
 
 .DEFAULT_GOAL := help
-.PHONY: up down build scale-up scale-down help
+.PHONY: up down build scale-up scale-down help migrate reset help
 
 help: ## Display this help message
 	@echo "Usage: make [target]"
