@@ -7,4 +7,4 @@ cd /home/akunsialbert/Projects/sari_tebu/deployment
 # 
 # Karena cron trigger tiap menit disaat dimana deployment butuh lebih dari semenit, maka cron trigger untuk kedua dan ketiga kalinya akan 
 # di-ignore dan akan di run pada menit berikutnya
-flock -n deployment.lock deploy.sh >> deployment.log 2>&1
+flock -n deployment.lock ./deploy.sh >> deployment.log 2>&1
