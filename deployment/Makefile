@@ -1,4 +1,4 @@
-SARI_TEBU_DIR?= /home/akunsialbert/Projects/Sari-Tebu
+SARI_TEBU_DIR?= /home/akunsialbert/Projects/sari_tebu
 COMPOSE_FILE := $(SARI_TEBU_DIR)/deployment/compose.yaml
 
 .DEFAULT_GOAL := help
