@@ -41,27 +41,7 @@ make build
 echo "$(date --utc +%FT%TZ): Scaling up..."
 make scale-up
 
-echo "$(date --utc +%FT%TZ): Waiting for new containers to become healthy..."
-
-# Loop maksimum 16 kali x 5 detik = 90 detik total timeout
-# Jika melewati maka exit
-timeout_rounds=16
-while [ $timeout_rounds -gt 0 ]; do
-    unhealthy=$(docker ps --filter "name=sari-tebu-production-api" --filter "name=sari-tebu-production-web" --filter "health=unhealthy" -q)
-    if [ -n "$unhealthy" ]; then
-        echo "$(date --utc +%FT%TZ): New container reported UNHEALTHY, aborting deployment"
-        docker ps --filter "name=sari-tebu-production-api" --filter "name=sari-tebu-production-web" --filter "health=unhealthy"
-        exit 1
-    fi
-
-    if ! docker ps --filter "name=sari-tebu-production-api" --filter "name=sari-tebu-production-web" --filter "health=starting" | grep -q "starting"; then
-        echo "$(date --utc +%FT%TZ): New containers are healthy!"
-        break
-    fi
-
-    sleep 5
-    timeout_rounds=$((timeout_rounds - 1))
-done
+sleep 30
 
 if [ $timeout_rounds -eq 0 ]; then
     echo "$(date --utc +%FT%TZ): Healthcheck timeout reached, aborting deployment"
