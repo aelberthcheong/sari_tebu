@@ -30,7 +30,7 @@ git reset --hard origin/main
 build_version=$(git rev-parse HEAD)
 echo "$(date --utc +%FT%TZ): Changes detected, deploying new version: $build_version"
 
-pushd /deployment > /dev/null
+pushd deployment > /dev/null
 
 id_api_container_lama=$(docker ps -q --filter "name=sari-tebu-production-api")
 id_web_container_lama=$(docker ps -q --filter "name=sari-tebu-production-web")
