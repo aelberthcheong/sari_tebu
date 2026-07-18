@@ -106,10 +106,10 @@ crontab -e
 * * * * * /home/<user>/Sari-Tebu/deployment/cd.sh # mesti berupa absolute path
 ```
  
-Buat file ini di `/etc/logrotate.d/sari-tebu` agar log yang dihasilkan tidak menumpuk:
+Buat file ini di `/etc/logrotate.d/sari_tebu` agar log yang dihasilkan tidak menumpuk:
  
 ```sh
-/home/<user>/Sari-Tebu/deployment.log {
+/home/<user>/sari_tebu/deployment.log {
     daily
     rotate 7
     compress

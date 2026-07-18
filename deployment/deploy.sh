@@ -3,7 +3,7 @@
 set -e
 
 # Pastikan berada pada Project root directory terlebih dahulu
-cd /home/akunsialbert/Projects/Sari-Tebu
+cd /home/akunsialbert/Projects/sari_tebu
 
 echo "$(date --utc +%FT%TZ): Fetching remote repository..."
 git fetch origin

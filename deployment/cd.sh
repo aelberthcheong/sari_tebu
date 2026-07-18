@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Pastikan berada pada Deployment directory terlebih dahulu
-cd /home/akunsialbert/Projects/Sari-Tebu/deployment
+cd /home/akunsialbert/Projects/sari_tebu/deployment
 
 # Kenapa pakai lock?
 # 
