@@ -23,6 +23,7 @@ services:
             start_period: 60s
         networks:
             - db_internal
+            - db_host
 
     # Secara implisit nama container ini berupa 'sari-tebu-production-api-#',
     # karena service ini akan di scale oleh docker kita tidak dapat menetapkan nama container secara eksplisit
@@ -85,4 +86,5 @@ volumes:
 networks:
     db_internal:
         internal: true
+    db_host:
     edge:

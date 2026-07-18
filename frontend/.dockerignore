@@ -4,8 +4,8 @@ node_modules/
 
 # Include source dan build file yang dibutuhkan docker build
 !src/
-!prisma/schema.prisma
-!prisma/migrations/
+!public/
 !*.config.js
 !package.json
 !package-lock.json
+!index.html

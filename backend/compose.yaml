@@ -21,7 +21,5 @@ services:
             retries: 3
             start_period: 60s
 
-# TODO(AELBERTH): redis, redocs, rabbitMQ, mediabunny, cloudflare R2
-
 volumes:
     mysql_data:
