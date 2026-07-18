@@ -4,7 +4,6 @@ async function init() {
     const host = process.env.HOST;
     const port = process.env.PORT;
 
-    // cleanupExpiredSessions();
     app.listen(port, host, function () {
         console.log(
             [

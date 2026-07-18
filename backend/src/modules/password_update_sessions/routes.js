@@ -1,19 +1,19 @@
 import { Router } from "express";
-import requireRateLimit from "#/shared/middlewares/rate_limit.js";
-import requireValidation from "#/shared/middlewares/validation.js";
-import requireAuthSession from "#/shared/middlewares/auth_session.js";
-import requirePasswordUpdateSession from "#/shared/middlewares/password_update_session.js";
 
+import requireRateLimit from "#/shared/middlewares/rate_limit.js";
 import {
-    verifyCurrentPasswordSchema,
-    updatePasswordSchema,
-} from "./schema.js";
+    requireAuthSession,
+    requirePasswordUpdateSession,
+} from "#/shared/middlewares/sessions.js";
+import requireValidation from "#/shared/middlewares/validation.js";
+
 import {
     createPasswordUpdateSession,
     confirmCurrentPassword,
     updatePassword,
     cancelPasswordUpdate,
 } from "./controller.js";
+import { verifyCurrentPasswordSchema, updatePasswordSchema } from "./schema.js";
 
 const routes = Router();
 
@@ -24,11 +24,11 @@ const routes = Router();
  * Hanya membuat token 'password_update_session_token' di cookie.
  *
  * POST /verify-password
- * Kirim password saat ini untuk diverifikasi. Jika benar, 
+ * Kirim password saat ini untuk diverifikasi. Jika benar,
  * lapisan 'password_verified_at' akan diisi timestamp di DB.
  *
  * PATCH /
- * Kirim password baru. Mengubah data field di model User, 
+ * Kirim password baru. Mengubah data field di model User,
  * lalu menghapus session update ini.
  *
  * DELETE /

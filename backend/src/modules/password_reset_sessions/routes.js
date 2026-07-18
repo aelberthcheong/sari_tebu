@@ -1,12 +1,9 @@
 import { Router } from "express";
+
 import requireRateLimit from "#/shared/middlewares/rate_limit.js";
+import { requirePasswordResetSession } from "#/shared/middlewares/sessions.js";
 import requireValidation from "#/shared/middlewares/validation.js";
-import requirePasswordResetSession from "#/shared/middlewares/password_reset_session.js";
-import {
-    createPasswordResetSessionSchema,
-    verifyEmailAddressSchema,
-    resetPasswordSchema,
-} from "./schema.js";
+
 import {
     createPasswordResetSession,
     verifyEmailAddress,
@@ -14,6 +11,11 @@ import {
     resetPassword,
     cancelPasswordReset,
 } from "./controller.js";
+import {
+    createPasswordResetSessionSchema,
+    verifyEmailAddressSchema,
+    resetPasswordSchema,
+} from "./schema.js";
 
 const routes = Router();
 
@@ -60,9 +62,6 @@ routes.patch("/", [
     resetPassword,
 ]);
 
-routes.delete("/", [
-    requirePasswordResetSession(),
-    cancelPasswordReset,
-]);
+routes.delete("/", [requirePasswordResetSession(), cancelPasswordReset]);
 
 export default routes;

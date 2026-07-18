@@ -24,6 +24,7 @@ export default function requireValidation(type, schema) {
 
         if (error) throw error;
 
+        // Tambahkan ke property `validated-` pada request
         const key = "validated" + type.charAt(0).toUpperCase() + type.slice(1);
         req[key] = value;
 

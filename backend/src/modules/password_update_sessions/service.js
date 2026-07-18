@@ -1,16 +1,17 @@
 import bcrypt from "bcrypt";
 import { nanoid } from "nanoid";
+
 import { prisma } from "#/shared/database/index.js";
 import ClientError from "#/shared/exceptions/client_error.js";
+import {
+    verifyUserPasswordPattern,
+    verifyUserPasswordStrength,
+} from "#/shared/lib/password.js";
 import {
     generateSessionSecret,
     hashSessionSecret,
     createSessionToken,
 } from "#/shared/lib/session_manager.js";
-import { 
-    verifyUserPasswordPattern, 
-    verifyUserPasswordStrength 
-} from "#/shared/lib/password.js";
 
 export async function createPasswordUpdateSession(authSession) {
     await prisma.passwordUpdateSession.deleteMany({
@@ -25,7 +26,9 @@ export async function createPasswordUpdateSession(authSession) {
             auth_session_id: authSession.id,
             session_secret_hash: hashSessionSecret(secret),
             password_verified_at: null,
-            expires_at: new Date(Date.now() + Number(process.env.SESSION_TOKEN_AGE)),
+            expires_at: new Date(
+                Date.now() + Number(process.env.SESSION_TOKEN_AGE),
+            ),
         },
     });
 
@@ -39,10 +42,13 @@ export async function findPasswordUpdateSession(id) {
     });
 }
 
-export async function verifyCurrentPassword(passwordUpdateSession, currentPassword) {
+export async function verifyCurrentPassword(
+    passwordUpdateSession,
+    currentPassword,
+) {
     const authSession = await prisma.authSession.findUnique({
         where: { id: passwordUpdateSession.auth_session_id },
-        include: { user: true }
+        include: { user: true },
     });
 
     if (!authSession) {
@@ -70,7 +76,9 @@ export async function verifyCurrentPassword(passwordUpdateSession, currentPasswo
 
 export async function updatePassword(passwordUpdateSession, newPassword) {
     if (!passwordUpdateSession.password_verified_at) {
-        throw ClientError.forbidden("Anda harus memverifikasi password saat ini terlebih dahulu");
+        throw ClientError.forbidden(
+            "Anda harus memverifikasi password saat ini terlebih dahulu",
+        );
     }
 
     const authSession = await prisma.authSession.findUnique({
@@ -83,14 +91,14 @@ export async function updatePassword(passwordUpdateSession, newPassword) {
 
     if (!verifyUserPasswordPattern(newPassword)) {
         throw ClientError.unprocessable(
-            "Password baru harus berukuran 10-100 karakter dan mematuhi standar ASCII."
+            "Password baru harus berukuran 10-100 karakter dan mematuhi standar ASCII.",
         );
     }
 
     const isSafe = await verifyUserPasswordStrength(newPassword);
     if (!isSafe) {
         throw ClientError.unprocessable(
-            "Password baru terlalu lemah karena pernah bocor di internet. Silakan pilih kata sandi yang berbeda."
+            "Password baru terlalu lemah karena pernah bocor di internet. Silakan pilih kata sandi yang berbeda.",
         );
     }
 

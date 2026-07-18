@@ -1,5 +1,13 @@
+# https://caddyserver.com/docs/caddyfile
+#
+# Setup caddy untuk serving compiled, minified dan bundled static assets (html, css, javascript)
+# serta untuk meng-handle SPA routing
 :80 {
-    root * /srv
+    root /srv
+    encode zstd gzip
+
+    # Kita set dimana saat browser coba fetch ke sebuah uri yang invalid kembali ke index.html
     try_files {path} /index.html
+
     file_server
 }

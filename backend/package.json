@@ -1,15 +1,4 @@
 {
-    "author": {
-        "name": "Universitas Mikroskil IF-A Sore Kelompok A",
-        "url": "https://github.com/Mikroskil-IFA-Sore-A"
-    },
-    "contributors": [
-        "Aelberth Cheong",
-        "Sean Ryo Valens Sahala",
-        "Fendy",
-        "Vincent Lim",
-        "Vincent2555"
-    ],
     "license": "MIT",
     "private": true,
     "type": "module",
@@ -36,7 +25,6 @@
         "express": "^5.2.1",
         "helmet": "^8.2.0",
         "joi": "^18.0.2",
-        "jsonwebtoken": "^9.0.3",
         "morgan": "^1.11.0",
         "nanoid": "^5.1.6",
         "prisma": "^7.8.0",
@@ -46,7 +34,8 @@
     "allowScripts": {
         "@prisma/engines@7.8.0": true,
         "bcrypt@6.0.0": true,
-        "prisma@7.8.0": true
+        "prisma@7.8.0": true,
+        "@scarf/scarf@1.4.0": true
     },
     "imports": {
         "#/*": "./src/*",

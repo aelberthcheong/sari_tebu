@@ -1,4 +1,5 @@
 import mail from "#/shared/email/index.js";
+
 import * as EmailAddressUpdateSessionService from "./service.js";
 
 export async function createEmailAddressUpdateSession(req, res) {

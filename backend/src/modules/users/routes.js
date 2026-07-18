@@ -1,37 +1,62 @@
 import { Router } from "express";
 
-import requireAuthSession from "#/shared/middlewares/auth_session.js";
-import requireRateLimit from "#/shared/middlewares/rate_limit.js";
+import { requireAuthSession } from "#/shared/middlewares/sessions.js";
 import requireValidation from "#/shared/middlewares/validation.js";
 
-import { createUserSchema } from "./schema.js";
+import {
+    addNewUser,
+    editUser,
+    getUserById,
+    getUserByUsername,
+    getUserByEmailAddress,
+    deleteUser,
+} from "./controller.js";
+import {
+    addNewUserSchema,
+    editUserSchema,
+    getUserByIdSchema,
+    getUserByUsernameSchema,
+    getUserByEmailAddressSchema,
+} from "./schema.js";
 
 const routes = Router();
 
+routes.post("/", [
+    requireAuthSession(),
+    requireValidation("body", addNewUserSchema),
+    addNewUser,
+]);
 
-// TODO(AELBERTH): Tolong di sesuaikan
-// routes.post("/", [
-//     requireValidation("body", createUserSchema),
-//     requireRateLimit(1000, 5, 5 * 60 * 1000),
-//     createUser,
-// ]);
+routes.get("/:id", [
+    requireAuthSession(),
+    requireValidation("params", getUserByIdSchema),
+    getUserById,
+]);
 
-// routes.get("/", [
-//     requireAuthSession(),
-//     requireValidation("body", searchUserSchema),
-//     getUsers,
-// ]);
-// routes.get("/:id", [requireAuthSession(), getUserById]);
-// routes.put("/:id", [
-//     requireAuthSession(),
-//     requireValidation("body", updateUserSchema),
-//     updateUser,
-// ]);
-// routes.patch("/:id", [
-//     requireAuthSession(),
-//     requireValidation("body", editUserSchema),
-//     editUser,
-// ]);
-// routes.delete("/:id", [requireAuthSession(), deleteUser]);
+routes.get("/:username", [
+    requireAuthSession(),
+    requireValidation("params", getUserByUsernameSchema),
+    getUserByUsername,
+]);
+
+routes.get("/:emailAddress", [
+    requireAuthSession(),
+    requireValidation("params", getUserByEmailAddressSchema),
+    getUserByEmailAddress,
+]);
+
+routes.put("/:id", [
+    requireAuthSession(),
+    requireValidation("body", editUserSchema),
+    editUser,
+]);
+
+routes.patch("/:id", [
+    requireAuthSession(),
+    requireValidation("body", editUserSchema),
+    editUser,
+]);
+
+routes.delete("/:id", [requireAuthSession(), deleteUser]);
 
 export default routes;

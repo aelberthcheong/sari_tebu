@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 
 set -e
-project_dir="/home/akunsialbert/Projects/Sari-Tebu"
+
+# Pastikan berada pada Project root directory terlebih dahulu
+cd /home/akunsialbert/Projects/Sari-Tebu
 
 echo "$(date --utc +%FT%TZ): Fetching remote repository..."
-git -C $project_dir fetch origin
+git fetch origin
 
 upstream=${1:-'@{u}'}                # HEAD refererence commit pada upstream
 local=$(git rev-parse @)             # HEAD local main branch
@@ -18,53 +20,64 @@ fi
 
 if [ $remote = $base ]; then
     echo "$(date --utc +%FT%TZ): local changes detected, stashing"
-    git -C $project_dir stash
+    git stash
 fi
 
-#
 # Hapus semua untracked files
-#
-git -C $project_dir clean -fd
-git -C $project_dir reset --hard origin/main
+git clean -fd
+git reset --hard origin/main
 
-build_version=$(git -C $project_dir rev-parse HEAD)
+build_version=$(git rev-parse HEAD)
 echo "$(date --utc +%FT%TZ): Changes detected, deploying new version: $build_version"
 
-#
-# Jalankan migrasi sebelum container baru running agar versi baru 
-# kode aplikasi tidak pakai schema lama.
-# 
-# kalau gagal, tampilkan error log tapi jangan hentikan deployment
-#
-echo "$(date --utc +%FT%TZ): Performing pending migrations on new version: $build_version"
-if make -C $project_dir migrate; then
-    echo "$(date --utc +%FT%TZ): Database migration completed successfully"
-else 
-    echo "$(date --utc +%FT%TZ): Database migration FAILED!"
-fi
+pushd /deployment > /dev/null
 
-id_server_container_lama=$(docker ps -q --filter "name=sari-tebu-production-server")
-id_frontend_container_lama=$(docker ps -q --filter "name=sari-tebu-production-frontend")
+id_api_container_lama=$(docker ps -q --filter "name=sari-tebu-production-api")
+id_web_container_lama=$(docker ps -q --filter "name=sari-tebu-production-web")
 
 echo "$(date --utc +%FT%TZ): Running Build..."
-make -C $project_dir build
+make build
 
-#
-# TODO(AELBERTH): Tolong di-perbaiki, jangan biarkan sleep aja. Pada suatu saat scaling time 
-#                 akan melebihi dari 30 detik dan disaat itulah bakal ada masalah
-#
 echo "$(date --utc +%FT%TZ): Scaling up..."
-make -C $project_dir scale-up
-sleep 30
+make scale-up
+
+echo "$(date --utc +%FT%TZ): Waiting for new containers to become healthy..."
+
+# Loop maksimum 16 kali x 5 detik = 90 detik total timeout
+# Jika melewati maka exit
+timeout_rounds=16
+while [ $timeout_rounds -gt 0 ]; do
+    unhealthy=$(docker ps --filter "name=sari-tebu-production-api" --filter "name=sari-tebu-production-web" --filter "health=unhealthy" -q)
+    if [ -n "$unhealthy" ]; then
+        echo "$(date --utc +%FT%TZ): New container reported UNHEALTHY, aborting deployment"
+        docker ps --filter "name=sari-tebu-production-api" --filter "name=sari-tebu-production-web" --filter "health=unhealthy"
+        exit 1
+    fi
+
+    if ! docker ps --filter "name=sari-tebu-production-api" --filter "name=sari-tebu-production-web" --filter "health=starting" | grep -q "starting"; then
+        echo "$(date --utc +%FT%TZ): New containers are healthy!"
+        break
+    fi
+
+    sleep 5
+    timeout_rounds=$((timeout_rounds - 1))
+done
+
+if [ $timeout_rounds -eq 0 ]; then
+    echo "$(date --utc +%FT%TZ): Healthcheck timeout reached, aborting deployment"
+    exit 1
+fi
 
 echo "$(date --utc +%FT%TZ): Scaling old containers down..."
-if [ -n "$id_server_container_lama" ]; then
-    docker container rm -f $id_server_container_lama
+if [ -n "$id_api_container_lama" ]; then
+    docker container rm -f "$id_api_container_lama"
 fi
-if [ -n "$id_frontend_container_lama" ]; then
-    docker container rm -f $id_frontend_container_lama
+if [ -n "$id_web_container_lama" ]; then
+    docker container rm -f "$id_web_container_lama"
 fi
 
-make -C $project_dir scale-down
+make scale-down
 
 echo "$(date --utc +%FT%TZ): Done."
+
+popd > /dev/null

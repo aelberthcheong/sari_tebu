@@ -6,41 +6,6 @@ const formatEmailCode = (code) => {
     return code.slice(0, 4) + "-" + code.slice(4, 8);
 };
 
-// class SESClient {
-//     constructor({ region, accessKeyId, secretAccessKey }) {
-//         this.client = new SESv2Client({
-//             region: region,
-//             credentials: {
-//                 accessKeyId: accessKeyId,
-//                 secretAccessKey: secretAccessKey,
-//             },
-//         });
-//     }
-
-//     async sendEmail(source, dest, { subject, body }) {
-//         try {
-//             return await this.client.send(
-//                 new SendEmailCommand({
-//                     FromEmailAddress: source,
-//                     Destination: { ToAddresses: [dest] },
-//                     Content: {
-//                         Simple: {
-//                             Subject: {
-//                                 Data: subject,
-//                             },
-//                             Body: {
-//                                 Text: {
-//                                     Data: body,
-//                                 },
-//                             },
-//                         },
-//                     },
-//                 }),
-//             );
-//         } catch {}
-//     }
-// }
-
 class ResendClient {
     constructor({ apiKey }) {
         this.client = new Resend(apiKey);
@@ -147,56 +112,3 @@ If you didn't request this, you can safely ignore this email.
         await this.client.sendEmail(this.address, dest, { subject, body });
     }
 }
-
-//     // NOTE: Email template di-create sekali dan akan di store pada SES, maka hit api yang sama
-//     //       akan di-reject
-//     await Promise.allSettled([
-//         sesClient.client.send(
-//             new CreateEmailTemplateCommand({
-//                 TemplateName: "VerificationCode",
-//                 TemplateContent: {
-//                     Subject: `{{ subject }}`,
-//                     Html: `
-//                             <div>
-//                                 <h2>Hi {{ username }},</h2>
-//                                 <b>DO NOT SHARE</b> this code with anyone. If you didn't request this, you can safely ignore this email.
-//                             </div>
-//                         `,
-//                     Text: "Your email address verification code is: {{ code }}",
-//                 },
-//             }),
-//         ),
-//         sesClient.client.send(
-//             new CreateEmailTemplateCommand({
-//                 TemplateName: "PasswordReset",
-//                 TemplateContent: {
-//                     Subject: `{{ subject }}`,
-//                     Html: `
-//                             <div>
-//                                 <h2>Hi {{ username }},</h2>
-//                                 <b>DO NOT SHARE</b> this code with anyone. If you didn't request this, you can safely ignore this email.
-//                             </div>
-//                         `,
-//                     Text: "Your password reset code is: {{code}}",
-//                 },
-//             }),
-//         ),
-//         sesClient.client.send(
-//             new CreateEmailTemplateCommand({
-//                 TemplateName: "AddressUpdate",
-//                 TemplateContent: {
-//                     Subject: `{{ subject }}`,
-//                     Html: `
-//                             <div>
-//                                 <h2>Hi {{ username }},</h2>
-//                                 <b>DO NOT SHARE</b> this code with anyone. If you didn't request this, you can safely ignore this email.
-//                             </div>
-//                         `,
-//                     Text: "Your address update code is: {{code}}",
-//                 },
-//             }),
-//         ),
-//     ]);
-
-//     return sesClient;
-// }

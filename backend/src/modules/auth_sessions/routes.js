@@ -1,10 +1,14 @@
 import { Router } from "express";
+
 import requireRateLimit from "#/shared/middlewares/rate_limit.js";
+import {
+    requireSignupSession,
+    requireAuthSession,
+} from "#/shared/middlewares/sessions.js";
 import requireValidation from "#/shared/middlewares/validation.js";
-import requireSignupSession from "#/shared/middlewares/signup_session.js";
-import requireAuthSession from "#/shared/middlewares/auth_session.js";
-import { registerSchema, loginSchema } from "./schema.js";
+
 import { register, login, logout, getCurrentSession } from "./controller.js";
+import { registerSchema, loginSchema } from "./schema.js";
 
 const routes = Router();
 
@@ -35,14 +39,7 @@ routes.post("/login", [
     login,
 ]);
 
-routes.delete("/", [
-    requireAuthSession(),
-    logout,
-]);
-
-routes.get("/", [
-    requireAuthSession(),
-    getCurrentSession,
-]);
+routes.delete("/", [requireAuthSession(), logout]);
+routes.get("/", [requireAuthSession(), getCurrentSession]);
 
 export default routes;

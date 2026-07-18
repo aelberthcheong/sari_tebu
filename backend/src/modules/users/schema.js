@@ -1,21 +1,27 @@
 import Joi from "joi";
 
-export const createUserSchema = Joi.object({
+export const addNewUserSchema = Joi.object({
     emailAddress: Joi.string().email().max(100).required(),
-    username: Joi.string().min(3).max(50).required(),
-    password: Joi.string().min(8).max(20).required(),
+    username: Joi.string().min(3).max(30).required(),
+    password: Joi.string().min(10).max(100).required(),
 });
 
-// export const searchUserSchema = Joi.object({
-//     emailAddress: Joi.string().email().optional(),
-// });
+export const editUserSchema = Joi.object({
+    id: Joi.string()
+        .pattern(/^user-[A-Za-z0-9_-]{21}$/)
+        .required(),
+});
 
-// export const updateUserSchema = Joi.object({
-//     email_address: Joi.string().email().max(100).required(),
-//     username: Joi.string().min(3).max(50).required(),
-// });
+export const getUserByIdSchema = Joi.object({
+    id: Joi.string()
+        .pattern(/^user-[A-Za-z0-9_-]{21}$/)
+        .required(),
+});
 
-// export const editUserSchema = Joi.object({
-//     email_address: Joi.string().email().max(255).optional(),
-//     username: Joi.string().min(3).max(50).optional(),
-// }).min(1);
+export const getUserByEmailAddressSchema = Joi.object({
+    emailAddress: Joi.string().email().max(100).required(),
+});
+
+export const getUserByUsernameSchema = Joi.object({
+    emailAddress: Joi.string().email().max(100).required(),
+});

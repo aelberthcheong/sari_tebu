@@ -1,11 +1,14 @@
-import mail from "#/shared/email/index.js";
 import { prisma } from "#/shared/database/index.js";
+import mail from "#/shared/email/index.js";
+
 import * as PasswordResetSessionService from "./service.js";
 
 export async function createPasswordResetSession(req, res) {
     const { emailAddress } = req.validatedBody;
     const { token, verificationCode } =
-        await PasswordResetSessionService.createPasswordResetSession(emailAddress);
+        await PasswordResetSessionService.createPasswordResetSession(
+            emailAddress,
+        );
 
     console.log(token);
 
@@ -48,7 +51,7 @@ export async function resendVerificationCode(req, res) {
     const user = await prisma.user.findUnique({
         where: { id: req.passwordResetSession.user_id },
     });
-    
+
     await mail.sendPasswordResetCodeEmail(user.email_address, verificationCode);
     res.status(200).json({
         status: "success",

@@ -6,6 +6,7 @@ export function generateSessionSecret() {
     return randomBytes(32);
 }
 
+// oxfmt-ignore
 /**
  * Hash session secret dengan algoritma SHA-256
  * @param {Buffer} secret
@@ -33,8 +34,10 @@ export function createSessionToken(sessionId, secret) {
  */
 export function parseSessionToken(token) {
     const parts = token.split(".");
-    if (parts.length !== 2)
+    if (parts.length !== 2) {
         throw new ClientError.badRequest("Invalid session token");
+    }
+
     const [sessionId, encodedSecret] = parts;
     return {
         sessionId,

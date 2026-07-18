@@ -17,15 +17,14 @@ export async function createAccountDeletionSession(req, res) {
 }
 
 export async function verifyPassword(req, res) {
-    await AccountDeletionSessionService.verifyPassword(
-        req.accountDeletionSession,
-        req.authSession.user_id,
+    await AccountDeletionSessionService.doesPasswordMatches(
+        req.authSession,
         req.validatedBody.password,
     );
 
     res.status(200).json({
         status: "success",
-        message: "Berhasil verifikasikan password"
+        message: "Berhasil verifikasikan password",
     });
 }
 
@@ -41,7 +40,7 @@ export async function deleteAccount(req, res) {
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
     };
-    
+
     res.clearCookie("auth_session_token", cookieOpts);
     res.clearCookie("account_deletion_session_token", cookieOpts);
 

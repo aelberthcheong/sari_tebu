@@ -1,12 +1,12 @@
 import { Router } from "express";
+
 import requireRateLimit from "#/shared/middlewares/rate_limit.js";
-import requireValidation from "#/shared/middlewares/validation.js";
-import requireAuthSession from "#/shared/middlewares/auth_session.js";
-import requireEmailAddressUpdateSession from "#/shared/middlewares/email_address_update_session.js";
 import {
-    createEmailAddressUpdateSessionSchema,
-    verifyEmailAddressSchema,
-} from "./schema.js";
+    requireAuthSession,
+    requireEmailAddressUpdateSession,
+} from "#/shared/middlewares/sessions.js";
+import requireValidation from "#/shared/middlewares/validation.js";
+
 import {
     createEmailAddressUpdateSession,
     verifyEmailAddress,
@@ -14,6 +14,10 @@ import {
     updateEmailAddress,
     cancelEmailAddressUpdate,
 } from "./controller.js";
+import {
+    createEmailAddressUpdateSessionSchema,
+    verifyEmailAddressSchema,
+} from "./schema.js";
 
 const routes = Router();
 

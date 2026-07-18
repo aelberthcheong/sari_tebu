@@ -16,19 +16,19 @@ build: ## Build the docker containers
 up: ## Run backend and frontend containers
 	docker compose -f "$(COMPOSE_FILE)" up -d
 
-scale-up: ## Scale up a second container for backend and frontend server
-	docker compose -f "$(COMPOSE_FILE)" up -d --no-deps --scale server=2 --no-recreate server
-	docker compose -f "$(COMPOSE_FILE)" up -d --no-deps --scale frontend=2 --no-recreate frontend
+scale-up: ## Scale up a second container for backend and frontend
+	docker compose -f "$(COMPOSE_FILE)" up -d --no-deps --scale api=2 --no-recreate api
+	docker compose -f "$(COMPOSE_FILE)" up -d --no-deps --scale web=2 --no-recreate web
 
-scale-down: ## Scale down the old container for backend and frontend server
-	docker compose -f "$(COMPOSE_FILE)" up -d --no-deps --scale server=1 --no-recreate server
-	docker compose -f "$(COMPOSE_FILE)" up -d --no-deps --scale frontend=1 --no-recreate frontend
+scale-down: ## Scale down the old container for backend and frontend
+	docker compose -f "$(COMPOSE_FILE)" up -d --no-deps --scale api=1 --no-recreate api
+	docker compose -f "$(COMPOSE_FILE)" up -d --no-deps --scale web=1 --no-recreate web
 
 migrate: ## migrate database
-	docker compose -f "$(COMPOSE_FILE)" run --rm server npx prisma migrate deploy
+	docker compose -f "$(COMPOSE_FILE)" run --rm api npx prisma migrate deploy
 
 reset: ## reset database (All data will be lost)
-	docker compose -f "$(COMPOSE_FILE)" run --rm server npx prisma migrate reset
+	docker compose -f "$(COMPOSE_FILE)" run --rm api npx prisma migrate reset
 
 down: ## Close down all containers
 	docker compose -f "$(COMPOSE_FILE)" down

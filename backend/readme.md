@@ -17,7 +17,7 @@ Backend ini berjalan di atas runtime Node.js dengan framework Express, beserta p
 
 ### Prerequisites
 
-- **Node.js** v22.12.0 LTS (atau versi v22+ lainnya)
+- **Node.js** v26.0.0+
 - **MySQL** v8.4+
 - **Docker** 29+
 - Pastikan telah copy file `.env.example` jadi `.env`
@@ -47,16 +47,6 @@ npm run dev
 > [!NOTE]  
 > Anda dapatkan jalankan command `npx prisma studio` untuk membuka database editor bawaan Prisma
 > Secara default akan dijalankan di http://localhost:51212
-
-> [!WARNING]
-> Pada `npm run dev` terdapat flag `--import dotenv/config`. Hal ini diperlukan karena Prisma
-> memerlukan env vars (seperti `DB_URL`) untuk melakukan koneksi ke database, dan flag ini
-> memastikan `dotenv` sudah memuat isi `.env` sebelum modul lain (termasuk Prisma adapter MariaDB)
-> dijalankan.
->
-> Pada production, flag ini tidak digunakan karena environment variables sudah diatur langsung
-> oleh Docker (`environment:` / `env_file:` pada `docker-compose.yml`), sehingga library `dotenv`
-> menjadi dev-dependencies dan tidak perlu saat production.
 
 ## Lisensi
 Proyek ini dilisensikan di bawah Lisensi MIT - lihat [LICENSE](../LICENSE) untuk detailnya.

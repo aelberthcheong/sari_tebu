@@ -1,11 +1,13 @@
-import mail from "#/shared/email/index.js";
 import { prisma } from "#/shared/database/index.js";
+import mail from "#/shared/email/index.js";
+
 import * as PasswordUpdateSessionService from "./service.js";
 
 export async function createPasswordUpdateSession(req, res) {
-    const { token } = await PasswordUpdateSessionService.createPasswordUpdateSession(
-        req.authSession,
-    );
+    const { token } =
+        await PasswordUpdateSessionService.createPasswordUpdateSession(
+            req.authSession,
+        );
 
     const user = await prisma.user.findUnique({
         where: { id: req.authSession.user_id },
@@ -24,7 +26,8 @@ export async function createPasswordUpdateSession(req, res) {
 
     res.status(201).json({
         status: "success",
-        message: "Session pembaruan kata sandi dibuat. Silakan verifikasi password lama Anda.",
+        message:
+            "Session pembaruan kata sandi dibuat. Silakan verifikasi password lama Anda.",
     });
 }
 
@@ -33,21 +36,22 @@ export async function confirmCurrentPassword(req, res) {
 
     await PasswordUpdateSessionService.verifyCurrentPassword(
         req.passwordUpdateSession,
-        currentPassword
+        currentPassword,
     );
 
     res.status(200).json({
         status: "success",
-        message: "Password lama cocok, silakan lanjutkan pengisian password baru",
+        message:
+            "Password lama cocok, silakan lanjutkan pengisian password baru",
     });
 }
 
 export async function updatePassword(req, res) {
     const { newPassword } = req.validatedBody;
-    
+
     await PasswordUpdateSessionService.updatePassword(
         req.passwordUpdateSession,
-        newPassword
+        newPassword,
     );
 
     res.clearCookie("password_update_session_token", {

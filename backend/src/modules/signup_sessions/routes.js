@@ -1,8 +1,8 @@
 import { Router } from "express";
 
 import requireRateLimit from "#/shared/middlewares/rate_limit.js";
+import { requireSignupSession } from "#/shared/middlewares/sessions.js";
 import requireValidation from "#/shared/middlewares/validation.js";
-import requireSignupSession from "#/shared/middlewares/signup_session.js";
 
 import {
     createSignupSession,
@@ -49,9 +49,6 @@ routes.post("/resend-verification-code", [
     resendVerificationCode,
 ]);
 
-routes.delete("/", [
-    requireSignupSession(),
-    cancelSignup,
-]);
+routes.delete("/", [requireSignupSession(), cancelSignup]);
 
 export default routes;

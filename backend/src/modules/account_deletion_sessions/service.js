@@ -1,4 +1,6 @@
+import bcrypt from "bcrypt";
 import { nanoid } from "nanoid";
+
 import { prisma } from "#/shared/database/index.js";
 import ClientError from "#/shared/exceptions/client_error.js";
 import {
@@ -6,23 +8,25 @@ import {
     hashSessionSecret,
     createSessionToken,
 } from "#/shared/lib/session_manager.js";
-import bcrypt from "bcrypt";
 
-export async function createAccountDeletionSession(authSession) {
-    // Hapus session lama untuk auth_session yang sama kalau ada.
-    await prisma.accountDeletionSession.deleteMany({
-        where: { auth_session_id: authSession.id },
-    });
-
+export async function createAccountDeletionSession(authSessionId) {
     const secret = generateSessionSecret();
-    const session = await prisma.accountDeletionSession.create({
-        data: {
-            id: nanoid(),
-            auth_session_id: authSession.id,
-            session_secret_hash: hashSessionSecret(secret),
-            password_verified_at: null,
-            expires_at: new Date(Date.now() + Number(process.env.SESSION_TOKEN_AGE)),
-        },
+    const session = await prisma.$transaction(async (tx) => {
+        await prisma.accountDeletionSession.deleteMany({
+            where: { auth_session_id: authSessionId },
+        });
+
+        return await tx.accountDeletionSession.create({
+            data: {
+                id: nanoid(),
+                auth_session_id: authSessionId,
+                session_secret_hash: hashSessionSecret(secret),
+                password_verified_at: null,
+                expires_at: new Date(
+                    Date.now() + Number(process.env.SESSION_TOKEN_AGE),
+                ),
+            },
+        });
     });
 
     const token = createSessionToken(session.id, secret);
@@ -35,30 +39,32 @@ export async function findAccountDeletionSession(id) {
     });
 }
 
-export async function verifyPassword(accountDeletionSession, userId, password) {
-    const hashedPassword = await prisma.user.findUnique({
-        where: { id: userId },
+export async function doesPasswordMatches(authSession, passwordFromUser) {
+    const hashedPasswordFromDB = await prisma.user.findUnique({
+        where: { id: authSession.userId },
         select: { password_hash: true },
     });
 
-    const matched = await bcrypt.compare(hashedPassword, password);
+    const matched = await bcrypt.compare(
+        hashedPasswordFromDB,
+        passwordFromUser,
+    );
+
     if (!matched) {
-        throw ClientError.badRequest("Password Salah");
+        throw ClientError.badRequest("Password salah");
     }
 
     await prisma.accountDeletionSession.update({
-        where: { id: accountDeletionSession.id },
+        where: { auth_session_id: authSession.id },
         data: { password_verified_at: new Date() },
     });
 }
 
-/**
- * Hapus akun user beserta semua data yang terkait. 
- * CASCADE di schema: User -> AuthSession -> sub-sessions, semua terhapus.
- */
 export async function deleteAccount(accountDeletionSession, authSession) {
     if (!accountDeletionSession.password_verified_at) {
-        throw ClientError.forbidden("Harap verifikasi password terlebih dahulu");
+        throw ClientError.forbidden(
+            "Harap verifikasi password terlebih dahulu",
+        );
     }
 
     await prisma.user.delete({

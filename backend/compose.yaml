@@ -1,16 +1,27 @@
 name: sari-tebu-development
 services:
     database:
+        container_name: sari-tebu-development-database
         image: mysql:8.4
-        container_name: mysql8.4
         restart: unless-stopped
+        ports:
+            - "127.0.0.1:3306:3306"
+
+        # NOTE: Karena database hanya dapat berkomukasi antar container lain,
+        #       membiarkan nya sebagai root sudah cukup aman
         environment:
             - MYSQL_ROOT_PASSWORD=root
-        ports:
-            - "3306:3306"
+
+        volumes:
+            - mysql_data:/var/lib/mysql
         healthcheck:
             test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
             interval: 5s
-            timeout: 20s
-            retries: 10
-            start_period: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 60s
+
+# TODO(AELBERTH): redis, redocs, rabbitMQ, mediabunny, cloudflare R2
+
+volumes:
+    mysql_data:

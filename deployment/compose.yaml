@@ -1,50 +1,63 @@
 name: sari-tebu-production
 services:
-    # NOTE: karena database hanya dapat berkomukasi antar container lain,
-    #       membiarkan nya sebagai root sudah cukup aman.
     database:
+        container_name: sari-tebu-production-database
         image: mysql:8.4
-        container_name: sari-tebu-database
         restart: unless-stopped
+
+        # NOTE: Biarkan host nerima koneksi dari 127.0.0.1:3306 agar kita bisa akses dengan Dbeaver/Datagrip
+        #       berguna kalau ingin edit database di production selama berada pada local network yang sama
+        ports:
+            - "127.0.0.1:3306:3306"
+
         environment:
             - MYSQL_ROOT_PASSWORD=root
+
         volumes:
             - mysql_data:/var/lib/mysql
         healthcheck:
             test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
             interval: 5s
-            timeout: 20s
-            retries: 10
-            start_period: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 60s
+        networks:
+            - db_internal
 
-    server:
+    # Secara implisit nama container ini berupa 'sari-tebu-production-api-#',
+    # karena service ini akan di scale oleh docker kita tidak dapat menetapkan nama container secara eksplisit
+    api:
         build:
             context: ../backend
-            dockerfile: dockerfile
         restart: unless-stopped
         env_file:
             - ../backend/.env.prod
-        expose:
-            - "8080"
         depends_on:
             database:
                 condition: service_healthy
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://127.0.0.1:8080/api/healthcheck"]
+            interval: 5s
+            timeout: 10s
+            retries: 3
+            start_period: 60s
+        networks:
+            - db_internal
+            - edge
 
-    frontend:
+    # Secara implisit nama container ini berupa 'sari-tebu-production-web-#',
+    # karena service ini akan di scale oleh docker kita tidak dapat menetapkan nama container secara eksplisit
+    web:
         build:
             context: ../frontend
-            dockerfile: dockerfile
         restart: unless-stopped
-        env_file:
-            - ../frontend/.env.prod
-        expose:
-            - "80"
-    
+        networks:
+            - edge
+
     caddy:
+        container_name: sari-tebu-production-reverse-proxy
         build:
             context: .
-            dockerfile: dockerfile
-        container_name: sari-tebu-reverse-proxy
         restart: unless-stopped
         ports:
             - "80:80"
@@ -57,10 +70,19 @@ services:
             - caddy_data:/data
             - caddy_config:/config
         depends_on:
-            - server
-            - frontend
+            - api
+            - web
+        networks:
+            - edge
 
 volumes:
     mysql_data:
     caddy_data:
     caddy_config:
+
+# NOTE: `db_internal` berarti hanya service dibawah network ini yang dapat talk with each other
+#       sedangkan untuk `edge` yang dapat berkomunikasi ke external cloudflare edge network
+networks:
+    db_internal:
+        internal: true
+    edge:

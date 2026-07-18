@@ -1,4 +1,5 @@
 import { randomInt, createHash, timingSafeEqual } from "node:crypto";
+
 import { prisma } from "#/shared/database/index.js";
 import ClientError from "#/shared/exceptions/client_error.js";
 import {
@@ -8,19 +9,18 @@ import {
 } from "#/shared/lib/session_manager.js";
 
 function generateVerificationCode() {
-    return randomInt(10_000_000, 100_000_000)
-            .toString()
-            .padStart(8, "0");
+    return randomInt(10_000_000, 100_000_000).toString().padStart(8, "0");
 }
 
 function hashVerificationCodeToBuffer(code) {
-    const hexString = createHash("sha256")
-        .update(code)
-        .digest("hex");
+    const hexString = createHash("sha256").update(code).digest("hex");
     return Buffer.from(hexString, "hex");
 }
 
-export async function createEmailAddressUpdateSession(authSession, newEmailAddress) {
+export async function createEmailAddressUpdateSession(
+    authSession,
+    newEmailAddress,
+) {
     // Pastikan alamat baru belum dipakai akun lain.
     const exists = await prisma.user.findUnique({
         where: { email_address: newEmailAddress },
@@ -46,7 +46,9 @@ export async function createEmailAddressUpdateSession(authSession, newEmailAddre
             email_verified_at: null,
             new_email_address: newEmailAddress,
             email_code_hash: hashedCodeBuffer,
-            expires_at: new Date(Date.now() + Number(process.env.SESSION_TOKEN_AGE)),
+            expires_at: new Date(
+                Date.now() + Number(process.env.SESSION_TOKEN_AGE),
+            ),
         },
     });
 
@@ -64,8 +66,10 @@ export async function verifyEmailAddress(emailAddressUpdateSession, code) {
     const hashedCodeBuffer = hashVerificationCodeToBuffer(code);
     const dbCodeBuffer = Buffer.from(emailAddressUpdateSession.email_code_hash);
 
-    // FIX: Gunakan timingSafeEqual untuk mencegah timing attack
-    if (hashedCodeBuffer.length !== dbCodeBuffer.length || !timingSafeEqual(hashedCodeBuffer, dbCodeBuffer)) {
+    if (
+        hashedCodeBuffer.length !== dbCodeBuffer.length ||
+        !timingSafeEqual(hashedCodeBuffer, dbCodeBuffer)
+    ) {
         throw ClientError.unprocessable("Invalid verification code.");
     }
 
@@ -112,7 +116,9 @@ export async function updateEmailAddress(emailAddressUpdateSession) {
     await prisma.$transaction([
         prisma.user.update({
             where: { id: authSession.user_id },
-            data: { email_address: emailAddressUpdateSession.new_email_address },
+            data: {
+                email_address: emailAddressUpdateSession.new_email_address,
+            },
         }),
         prisma.authSession.deleteMany({
             where: {

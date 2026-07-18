@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import requireAuthSession from "#/shared/middlewares/auth_session.js";
+import { requireAuthSession } from "#/shared/middlewares/sessions.js";
 import requireValidation from "#/shared/middlewares/validation.js";
 
 import { checkout, listTransactions, getTransaction } from "./controller.js";

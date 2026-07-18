@@ -12,21 +12,23 @@
     email {$ACME_EMAIL}
 }
 
-*.kelompoka.tech {
+https://saritebu.aelberthcheong.dev {
+
+    # Coba hit API Cloudflare untuk cari SSL sertifikat
     tls {
         dns cloudflare {$CLOUDFLARE_API_TOKEN}
     }
 
-    # API calls proxy ke server (backend)
+    # API calls proxy ke backend
     handle /api/* {
-        reverse_proxy server:8080
+        reverse_proxy api:8080
     }
 
     # Yang lain proxy ke frontend
     handle {
-        reverse_proxy frontend:80
+        reverse_proxy web:80
     }
 }
 
-import Caddyfile.d/*.caddyfile
-
+# Ignore this for now, i suppose
+# import Caddyfile.d/*.caddyfile

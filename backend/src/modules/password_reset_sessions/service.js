@@ -1,17 +1,19 @@
 import { randomInt, createHash, timingSafeEqual } from "node:crypto";
+
 import bcrypt from "bcrypt";
 import { nanoid } from "nanoid";
+
 import { prisma } from "#/shared/database/index.js";
 import ClientError from "#/shared/exceptions/client_error.js";
+import {
+    verifyUserPasswordPattern,
+    verifyUserPasswordStrength,
+} from "#/shared/lib/password.js";
 import {
     generateSessionSecret,
     hashSessionSecret,
     createSessionToken,
 } from "#/shared/lib/session_manager.js";
-import { 
-    verifyUserPasswordPattern, 
-    verifyUserPasswordStrength 
-} from "#/shared/lib/password.js";
 
 /**
  * Tidak melempar error kalau email tidak ditemukan -- untuk menghindari
@@ -22,7 +24,7 @@ export async function createPasswordResetSession(emailAddress) {
     const user = await prisma.user.findUnique({
         where: { email_address: emailAddress },
     });
-    
+
     if (!user) {
         return { token: null, verificationCode: null };
     }
@@ -42,7 +44,9 @@ export async function createPasswordResetSession(emailAddress) {
         .update(verificationCode)
         .digest("hex");
 
-    const tokenLifetime = new Date(Date.now() + Number(process.env.SESSION_TOKEN_AGE));
+    const tokenLifetime = new Date(
+        Date.now() + Number(process.env.SESSION_TOKEN_AGE),
+    );
     const session = await prisma.passwordResetSession.create({
         data: {
             id: nanoid(),
@@ -50,7 +54,7 @@ export async function createPasswordResetSession(emailAddress) {
             session_secret_hash: hashSessionSecret(secret),
             email_code_hash: Buffer.from(hashedVerificationCode, "hex"),
             email_verified_at: null,
-            expires_at: tokenLifetime
+            expires_at: tokenLifetime,
         },
     });
 
@@ -64,15 +68,21 @@ export async function findPasswordResetSession(id) {
     });
 }
 
-export async function verifyEmailAddress(passwordResetSession, verificationCode) {
+export async function verifyEmailAddress(
+    passwordResetSession,
+    verificationCode,
+) {
     const hashedVerificationCode = createHash("sha256")
         .update(verificationCode)
         .digest("hex");
 
-    const payloadCode  = Buffer.from(hashedVerificationCode, "hex");
+    const payloadCode = Buffer.from(hashedVerificationCode, "hex");
     const databaseCode = Buffer.from(passwordResetSession.email_code_hash);
 
-    if (payloadCode.length !== databaseCode.length || !timingSafeEqual(payloadCode, databaseCode)) {
+    if (
+        payloadCode.length !== databaseCode.length ||
+        !timingSafeEqual(payloadCode, databaseCode)
+    ) {
         throw ClientError.unprocessable("Invalid verification code.");
     }
 
@@ -108,14 +118,14 @@ export async function resetPassword(passwordResetSession, newPassword) {
 
     if (!verifyUserPasswordPattern(newPassword)) {
         throw ClientError.unprocessable(
-            "Password baru harus berukuran 10-100 karakter dan mematuhi standar ASCII."
+            "Password baru harus berukuran 10-100 karakter dan mematuhi standar ASCII.",
         );
     }
 
     const isSafe = await verifyUserPasswordStrength(newPassword);
     if (!isSafe) {
         throw ClientError.unprocessable(
-            "Password baru terlalu lemah karena pernah bocor di internet. Silakan pilih kata sandi yang berbeda."
+            "Password baru terlalu lemah karena pernah bocor di internet. Silakan pilih kata sandi yang berbeda.",
         );
     }
 
@@ -136,8 +146,8 @@ export async function resetPassword(passwordResetSession, newPassword) {
 
 export async function deletePasswordResetSession(id) {
     try {
-        await prisma.passwordResetSession.delete({ 
-            where: { id } 
+        await prisma.passwordResetSession.delete({
+            where: { id },
         });
     } catch (err) {
         if (err.code === "P2025") {

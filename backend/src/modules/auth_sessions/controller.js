@@ -1,4 +1,5 @@
 import mail from "#/shared/email/index.js";
+
 import * as AuthSessionService from "./service.js";
 
 export async function register(req, res) {
@@ -38,7 +39,10 @@ export async function register(req, res) {
 
 export async function login(req, res) {
     const { emailAddress, password } = req.validatedBody;
-    const { token, user } = await AuthSessionService.login(emailAddress, password);
+    const { token, user } = await AuthSessionService.login(
+        emailAddress,
+        password,
+    );
 
     res.cookie("auth_session_token", token, {
         httpOnly: true,

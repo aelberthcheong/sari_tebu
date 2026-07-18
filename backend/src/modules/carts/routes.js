@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import requireAuthSession from "#/shared/middlewares/auth_session.js";
+import { requireAuthSession } from "#/shared/middlewares/sessions.js";
 import requireValidation from "#/shared/middlewares/validation.js";
 
 import {
@@ -31,9 +31,6 @@ routes.patch("/:cartId/items/:productId", [
     requireValidation("body", updateItemSchema),
     updateItem,
 ]);
-routes.delete("/:cartId/items/:productId", [
-    requireAuthSession(),
-    removeItem,
-]);
+routes.delete("/:cartId/items/:productId", [requireAuthSession(), removeItem]);
 
 export default routes;

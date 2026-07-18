@@ -10,22 +10,6 @@ datasource db {
     provider = "mysql"
 }
 
-model User {
-    id                      String                  @id             
-    email_address           String                  @unique         // ingat @index akan automatically buat index untuk kolom ini
-    username                String              
-    password_hash           String
-    created_at              DateTime                @default(now())
-    updated_at              DateTime                @updatedAt
-
-    auth_sessions           AuthSession[]
-    password_reset_sessions PasswordResetSession[]
-    carts                   Cart[]
-    transactions            Transaction[]
-
-    @@map("users")
-}
-
 model AuthSession {
     id                            String                       @id             
     user_id                       String                                       
@@ -33,7 +17,7 @@ model AuthSession {
     created_at                    DateTime                     @default(now())
     expires_at                    DateTime
     account_deletion_sessions     accountDeletionSession[]
-    email_address_update_sessions emailAddresssUpdateSession[]
+    email_address_update_sessions emailAddressUpdateSession[]
     password_update_sessions      passwordUpdateSession[]
     user                          User                         @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
@@ -68,7 +52,7 @@ model accountDeletionSession {
     @@index([auth_session_id])
 }
 
-model emailAddresssUpdateSession {
+model emailAddressUpdateSession {
     id                  String      @id      
     auth_session_id     String               
     session_secret_hash Bytes       @db.Blob
@@ -108,8 +92,24 @@ model SignupSession {
     @@map("signup_sessions")
 }
 
+model User {
+    id                      String                  @id             
+    email_address           String                  @unique         // ingat @unique akan automatically buat index untuk kolom ini
+    username                String              
+    password_hash           String
+    created_at              DateTime                @default(now())
+    updated_at              DateTime                @updatedAt
+
+    auth_sessions           AuthSession[]
+    password_reset_sessions PasswordResetSession[]
+    carts                   Cart[]
+    transactions            Transaction[]
+
+    @@map("users")
+}
+
 model Product {
-    id                String            @id 
+    id                String            @id
     name              String            @unique
     price             Int
     stock             Int
