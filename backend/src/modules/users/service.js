@@ -9,9 +9,10 @@ export async function createUser({ emailAddress, username, password }) {
     const user = await prisma.$transaction(async (tx) => {
         return await tx.user.create({
             data: {
+                id: `user-${nanoid()}`,
                 email_address: emailAddress,
                 username: username,
-                password: hashedPassword,
+                password_hash: hashedPassword,
             },
         });
     });
